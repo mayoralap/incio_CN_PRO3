@@ -96,14 +96,35 @@
     const A = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
     const B = "https://script.google.com/macros/s/AKfycbxZtzBbRiRqFPe4FQvf-OC1thE2QAB16f2Vr6fZ8cfRQ_ZGOOPrkMcN2568_E0xzczHJA/exec";
 
+    /**
+     * Obtiene o genera una huella única (deviceId) persistente para este navegador/dispositivo.
+     */
+    function obtenerOGenerarDeviceId() {
+      let deviceId = localStorage.getItem('cn_device_id');
+      if (!deviceId) {
+        deviceId = 'DEV-' + Math.random().toString(36).substring(2, 9).toUpperCase() + '-' + Date.now();
+        localStorage.setItem('cn_device_id', deviceId);
+      }
+      return deviceId;
+    }
+
     function C(r) {
       const m = document.getElementById('mensaje');
       m.style.color = "var(--color-primary)";
-      m.innerText = "Validando credenciales... redirigiendo.";
+      m.innerText = "Validando credenciales y dispositivo... redirigiendo.";
       
       if (r && r.credential) {
-        // Transmite el token JWT encriptado sin alterar en la URL
-        window.location.href = B + "?token=" + encodeURIComponent(r.credential);
+        // Recuperar la huella única del dispositivo local
+        const deviceId = obtenerOGenerarDeviceId();
+        const devName = navigator.platform || "Navegador Web";
+
+        // Construir la URL con el token JWT Y el deviceId obligatorio
+        const urlFinal = B + "?token=" + encodeURIComponent(r.credential) + 
+                             "&deviceId=" + encodeURIComponent(deviceId) + 
+                             "&devName=" + encodeURIComponent(devName);
+
+        // Transmitir al Web App de Apps Script
+        window.location.href = urlFinal;
       } else {
         m.style.color = "#d32f2f";
         m.innerText = "Error: No se recibió una credencial válida de Google.";
