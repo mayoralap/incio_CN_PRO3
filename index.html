@@ -108,27 +108,33 @@
       return deviceId;
     }
 
-    function C(r) {
-      const m = document.getElementById('mensaje');
-      m.style.color = "var(--color-primary)";
-      m.innerText = "Validando credenciales y dispositivo... redirigiendo.";
-      
-      if (r && r.credential) {
-        // Recuperar la huella única del dispositivo local
-        const deviceId = obtenerOGenerarDeviceId();
-        const devName = navigator.platform || "Navegador Web";
+    if (r && r.credential) {
+      // Recuperar la huella única del dispositivo local
+      const deviceId = obtenerOGenerarDeviceId();
+      const devName = obtenerNombreAmigable();  // ← YA ADAPTADO
 
-        // Construir la URL con el token JWT Y el deviceId obligatorio
-        const urlFinal = B + "?token=" + encodeURIComponent(r.credential) + 
-                             "&deviceId=" + encodeURIComponent(deviceId) + 
-                             "&devName=" + encodeURIComponent(devName);
+      // Construir la URL con el token JWT Y el deviceId obligatorio
+      const urlFinal = B + "?token=" + encodeURIComponent(r.credential) + 
+                          "&deviceId=" + encodeURIComponent(deviceId) + 
+                          "&devName=" + encodeURIComponent(devName);
 
-        // Transmitir al Web App de Apps Script
-        window.location.href = urlFinal;
-      } else {
-        m.style.color = "#d32f2f";
-        m.innerText = "Error: No se recibió una credencial válida de Google.";
-      }
+      // Transmitir al Web App de Apps Script
+      window.location.href = urlFinal;
+  } else {
+      m.style.color = "#d32f2f";
+      m.innerText = "Error: No se recibió una credencial válida de Google.";
+  }
+
+    function obtenerNombreAmigable() {
+      const ua = navigator.userAgent.toLowerCase();
+
+      if (ua.includes("windows")) return "Windows";
+      if (ua.includes("android")) return "Android";
+      if (ua.includes("iphone") || ua.includes("ipad")) return "iOS";
+      if (ua.includes("mac")) return "MacOS";
+      if (ua.includes("linux")) return "Linux";
+
+      return "Navegador Web";
     }
 
     function inicializarGIS() {
