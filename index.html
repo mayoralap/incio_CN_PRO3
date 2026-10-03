@@ -97,6 +97,21 @@
     const B = "https://script.google.com/macros/s/AKfycbwPZqOcUt4K1l0WiekV1Dq8a8ZsqdWKT3B634GtELYIjdeMtex6gqK-LFTB9e0T5ESBFg/exec";
 
     /**
+     * Devuelve un nombre amigable del dispositivo según el User-Agent.
+     */
+    function obtenerNombreAmigable() {
+      const ua = navigator.userAgent.toLowerCase();
+
+      if (ua.includes("windows")) return "Windows";
+      if (ua.includes("android")) return "Android";
+      if (ua.includes("iphone") || ua.includes("ipad")) return "iOS";
+      if (ua.includes("mac")) return "MacOS";
+      if (ua.includes("linux")) return "Linux";
+
+      return "Navegador Web";
+    }
+
+    /**
      * Obtiene o genera una huella única (deviceId) persistente para este navegador/dispositivo.
      */
     function obtenerOGenerarDeviceId() {
@@ -116,7 +131,7 @@
       if (r && r.credential) {
         // Recuperar la huella única del dispositivo local
         const deviceId = obtenerOGenerarDeviceId();
-        const devName = navigator.platform || "Navegador Web";
+        const devName = obtenerNombreAmigable();  // ← YA CORREGIDO
 
         // Construir la URL con el token JWT Y el deviceId obligatorio
         const urlFinal = B + "?token=" + encodeURIComponent(r.credential) + 
@@ -158,6 +173,7 @@
     }
 
     window.addEventListener('load', inicializarGIS);
-  </script>
+</script>
+
 </body>
 </html>
