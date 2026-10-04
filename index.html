@@ -92,7 +92,7 @@
     <div id="mensaje"></div>
   </div>
 
-  <script>
+<script>
     const A = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
     const B = "https://script.google.com/macros/s/AKfycbwPZqOcUt4K1l0WiekV1Dq8a8ZsqdWKT3B634GtELYIjdeMtex6gqK-LFTB9e0T5ESBFg/exec";
 
@@ -103,7 +103,10 @@
       const ua = navigator.userAgent.toLowerCase();
 
       if (ua.includes("windows")) return "Windows";
-      if (ua.includes("android")) return "Android";
+      if (ua.includes("android")) {
+        // Distinguir con precisión si es celular o tablet Android
+        return ua.includes("mobile") ? "Android Celular" : "Android Tablet";
+      }
       if (ua.includes("iphone") || ua.includes("ipad")) return "iOS";
       if (ua.includes("mac")) return "MacOS";
       if (ua.includes("linux")) return "Linux";
@@ -131,7 +134,7 @@
       if (r && r.credential) {
         // Recuperar la huella única del dispositivo local
         const deviceId = obtenerOGenerarDeviceId();
-        const devName = obtenerNombreAmigable();  // ← YA CORREGIDO
+        const devName = obtenerNombreAmigable();  // ← Ya devolverá "Android Celular" o "Android Tablet"
 
         // Construir la URL con el token JWT Y el deviceId obligatorio
         const urlFinal = B + "?token=" + encodeURIComponent(r.credential) + 
