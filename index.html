@@ -106,17 +106,17 @@
       // 1. Identificar el Navegador con sus siglas (Samsung va primero para evitar que caiga en Chrome)
       let navegador = "[ND]";
       if (uaLower.includes("samsungbrowser")) {
-        navegador = "Samsung [SI]";
+        navegador = "[SI]";
       } else if (uaLower.includes("edg/")) {
-        navegador = "Edge [ED]";
+        navegador = "[Ed]";
       } else if (uaLower.includes("opr/") || uaLower.includes("opera")) {
-        navegador = "Opera [OP]";
+        navegador = "[Op]";
       } else if (uaLower.includes("chrome/")) {
-        navegador = "Chrome [CH]";
+        navegador = "[Ch]";
       } else if (uaLower.includes("safari/") && !uaLower.includes("chrome")) {
-        navegador = "Safari [SF]";
+        navegador = "[Sf]";
       } else if (uaLower.includes("firefox/")) {
-        navegador = "Firefox [FF]";
+        navegador = "[Ff]";
       }
 
       // 2. Identificar la plataforma y fusionarla con el navegador detectado
