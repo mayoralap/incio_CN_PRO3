@@ -100,18 +100,48 @@
      * Devuelve un nombre amigable del dispositivo según el User-Agent.
      */
     function obtenerNombreAmigable() {
-      const ua = navigator.userAgent.toLowerCase();
+      const ua = navigator.userAgent;
+      const uaLower = ua.toLowerCase();
 
-      if (ua.includes("windows")) return "Windows";
-      if (ua.includes("android")) {
-        // Distinguir con precisión si es celular o tablet Android
-        return ua.includes("mobile") ? "Android Celular" : "Android Tablet";
+      // 1. Identificar el Navegador (con sus siglas o nombre)
+      let navegador = "Web";
+      if (uaLower.includes("edg/")) {
+        navegador = "Edge [ED]";
+      } else if (uaLower.includes("opr/") || uaLower.includes("opera")) {
+        navegador = "Opera [OP]";
+      } else if (uaLower.includes("chrome/")) {
+        navegador = "Chrome [CH]";
+      } else if (uaLower.includes("safari/") && !uaLower.includes("chrome")) {
+        navegador = "Safari [SF]";
+      } else if (uaLower.includes("firefox/")) {
+        navegador = "Firefox [FF]";
+      } else {
+        navegador = "Nav [ND]";
       }
-      if (ua.includes("iphone") || ua.includes("ipad")) return "iOS";
-      if (ua.includes("mac")) return "MacOS";
-      if (ua.includes("linux")) return "Linux";
 
-      return "Navegador Web";
+      // 2. Identificar el Dispositivo / Sistema Operativo
+      if (uaLower.includes("android")) {
+        const esTablet = /tablet/i.test(ua) || (Math.min(window.screen.width, window.screen.height) >= 600 && !/mobile/i.test(ua));
+        return esTablet ? "Tablet Android" : "Móvil Android";
+      }
+      
+      if (uaLower.includes("iphone") || uaLower.includes("ipad") || uaLower.includes("ipod")) {
+        return uaLower.includes("ipad") ? "iPad" : "iPhone";
+      }
+
+      if (uaLower.includes("windows")) {
+        return `Windows (${navegador})`;
+      }
+      
+      if (uaLower.includes("mac os") || uaLower.includes("macintosh")) {
+        return `MacOS (${navegador})`;
+      }
+      
+      if (uaLower.includes("linux")) {
+        return `Linux (${navegador})`;
+      }
+
+      return `Navegador Web (${navegador})`;
     }
 
     /**
