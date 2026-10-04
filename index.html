@@ -103,9 +103,11 @@
       const ua = navigator.userAgent;
       const uaLower = ua.toLowerCase();
 
-      // 1. Identificar el Navegador con sus siglas (incluyendo Desconocido [ND])
+      // 1. Identificar el Navegador con sus siglas (Samsung va primero para evitar que caiga en Chrome)
       let navegador = "[ND]";
-      if (uaLower.includes("edg/")) {
+      if (uaLower.includes("samsungbrowser")) {
+        navegador = "Samsung [SI]";
+      } else if (uaLower.includes("edg/")) {
         navegador = "Edge [ED]";
       } else if (uaLower.includes("opr/") || uaLower.includes("opera")) {
         navegador = "Opera [OP]";
