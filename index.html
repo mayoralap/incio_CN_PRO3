@@ -108,15 +108,15 @@
       if (uaLower.includes("samsungbrowser")) {
         navegador = "[SI]";
       } else if (uaLower.includes("edg/")) {
-        navegador = "[Ed]";
+        navegador = "[ED]";
       } else if (uaLower.includes("opr/") || uaLower.includes("opera")) {
-        navegador = "[Op]";
+        navegador = "[OP]";
       } else if (uaLower.includes("chrome/")) {
-        navegador = "[Ch]";
+        navegador = "[CH]";
       } else if (uaLower.includes("safari/") && !uaLower.includes("chrome")) {
-        navegador = "[Sf]";
+        navegador = "[SF]";
       } else if (uaLower.includes("firefox/")) {
-        navegador = "[Ff]";
+        navegador = "[FF]";
       }
 
       // 2. Identificar la plataforma y fusionarla con el navegador detectado
@@ -144,12 +144,25 @@
     }
 
     /**
-     * Obtiene o genera una huella única (deviceId) persistente para este navegador/dispositivo.
+     * Genera un identificador único matemático y determinista basado en las características físicas 
+     * del dispositivo y del navegador (huella digital estable), respaldado por localStorage.
      */
     function obtenerOGenerarDeviceId() {
       let deviceId = localStorage.getItem('cn_device_id');
       if (!deviceId) {
-        deviceId = 'DEV-' + Math.random().toString(36).substring(2, 9).toUpperCase() + '-' + Date.now();
+        // Combinar atributos estables del hardware/pantalla/navegador
+        const rawFingerprint = `${navigator.userAgent}|${screen.width}x${screen.height}|${screen.colorDepth}|${navigator.language}`;
+        
+        // Hash matemático rápido para convertir los atributos en una cadena alfanumérica fija y limpia
+        let hash = 0;
+        for (let i = 0; i < rawFingerprint.length; i++) {
+          const char = rawFingerprint.charCodeAt(i);
+          hash = ((hash << 5) - hash) + char;
+          hash |= 0; // Forzar a entero de 32 bits
+        }
+        
+        const hashHex = Math.abs(hash).toString(36).toUpperCase();
+        deviceId = `DEV-${hashHex}`;
         localStorage.setItem('cn_device_id', deviceId);
       }
       return deviceId;
@@ -161,11 +174,11 @@
       m.innerText = "Validando credenciales y dispositivo... redirigiendo.";
       
       if (r && r.credential) {
-        // Recuperar la huella única del dispositivo local
+        // Recuperar o calcular la huella digital matemática única del equipo
         const deviceId = obtenerOGenerarDeviceId();
-        const devName = obtenerNombreAmigable();  // ← Ya devolverá "Android Celular" o "Android Tablet"
+        const devName = obtenerNombreAmigable();
 
-        // Construir la URL con el token JWT Y el deviceId obligatorio
+        // Construir la URL con el token JWT, el deviceId matemático y el nombre amigable
         const urlFinal = B + "?token=" + encodeURIComponent(r.credential) + 
                              "&deviceId=" + encodeURIComponent(deviceId) + 
                              "&devName=" + encodeURIComponent(devName);
