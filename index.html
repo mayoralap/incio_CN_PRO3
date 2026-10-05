@@ -118,7 +118,7 @@
       } else if (uaLower.includes("firefox/")) {
         navegador = "FF";
       }
-      
+
       // 2. Identificar la plataforma y fusionarla con el navegador detectado
       if (uaLower.includes("android")) {
         const esTablet = uaLower.includes("tablet") || (Math.min(window.screen.width, window.screen.height) >= 600 && !uaLower.includes("mobile"));
@@ -139,9 +139,9 @@
       if (uaLower.includes("linux")) {
         return `Linux (${navegador})`;
       }
-      
-      return `Navegador Web (${navegador})`;
 
+      return `Navegador Web (${navegador})`;
+      }
     /**
      * Obtiene o genera una huella única (deviceId) persistente para este navegador/dispositivo.
      */
