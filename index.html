@@ -122,7 +122,7 @@
       // 2. Identificar la plataforma y fusionarla con el navegador detectado
       if (uaLower.includes("android")) {
         const esTablet = uaLower.includes("tablet") || (Math.min(window.screen.width, window.screen.height) >= 600 && !uaLower.includes("mobile"));
-        return esTablet ? `Android Tablet (\({navegador})` : `Android Celular (\){navegador})`;
+        return esTablet ? `Android Tablet (${navegador})` : `Android Celular (${navegador})`;
       }
       if (uaLower.includes("iphone") || uaLower.includes("ipod")) {
         return `iPhone (${navegador})`;
@@ -141,7 +141,8 @@
       }
 
       return `Navegador Web (${navegador})`;
-      }
+    }
+
     /**
      * Obtiene o genera una huella única (deviceId) persistente para este navegador/dispositivo.
      */
@@ -162,7 +163,7 @@
       if (r && r.credential) {
         // Recuperar la huella única del dispositivo local
         const deviceId = obtenerOGenerarDeviceId();
-        const devName = obtenerNombreAmigable();  // ← Ya devolverá "Android Celular" o "Android Tablet"
+        const devName = obtenerNombreAmigable();  // ← Ya devolverá correctamente "Android Celular (SB)" o similar
 
         // Construir la URL con el token JWT Y el deviceId obligatorio
         const urlFinal = B + "?token=" + encodeURIComponent(r.credential) + 
