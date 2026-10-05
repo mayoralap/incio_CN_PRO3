@@ -92,23 +92,53 @@
     <div id="mensaje"></div>
   </div>
 
-  <script>
+<script>
     const A = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
     const B = "https://script.google.com/macros/s/AKfycbwPZqOcUt4K1l0WiekV1Dq8a8ZsqdWKT3B634GtELYIjdeMtex6gqK-LFTB9e0T5ESBFg/exec";
 
     /**
-     * Devuelve un nombre amigable del dispositivo según el User-Agent.
+     * Devuelve un nombre amigable del dispositivo y navegador según el User-Agent.
      */
     function obtenerNombreAmigable() {
-      const ua = navigator.userAgent.toLowerCase();
+      const ua = navigator.userAgent;
+      const uaLower = ua.toLowerCase();
 
-      if (ua.includes("windows")) return "Windows";
-      if (ua.includes("android")) return "Android";
-      if (ua.includes("iphone") || ua.includes("ipad")) return "iOS";
-      if (ua.includes("mac")) return "MacOS";
-      if (ua.includes("linux")) return "Linux";
+      // 1. Identificar el Navegador con sus siglas (incluyendo Desconocido [ND])
+      let navegador = "[ND]";
+      if (uaLower.includes("edg/")) {
+        navegador = "Edge [ED]";
+      } else if (uaLower.includes("opr/") || uaLower.includes("opera")) {
+        navegador = "Opera [OP]";
+      } else if (uaLower.includes("chrome/")) {
+        navegador = "Chrome [CH]";
+      } else if (uaLower.includes("safari/") && !uaLower.includes("chrome")) {
+        navegador = "Safari [SF]";
+      } else if (uaLower.includes("firefox/")) {
+        navegador = "Firefox [FF]";
+      }
 
-      return "Navegador Web";
+      // 2. Identificar la plataforma y fusionarla con el navegador detectado
+      if (uaLower.includes("android")) {
+        const esTablet = uaLower.includes("tablet") || (Math.min(window.screen.width, window.screen.height) >= 600 && !uaLower.includes("mobile"));
+        return esTablet ? `Android Tablet (${navegador})` : `Android Celular (${navegador})`;
+      }
+      if (uaLower.includes("iphone") || uaLower.includes("ipod")) {
+        return `iPhone (${navegador})`;
+      }
+      if (uaLower.includes("ipad")) {
+        return `iPad (${navegador})`;
+      }
+      if (uaLower.includes("windows")) {
+        return `Windows (${navegador})`;
+      }
+      if (uaLower.includes("mac os") || uaLower.includes("macintosh")) {
+        return `MacOS (${navegador})`;
+      }
+      if (uaLower.includes("linux")) {
+        return `Linux (${navegador})`;
+      }
+
+      return `Navegador Web (${navegador})`;
     }
 
     /**
@@ -131,7 +161,7 @@
       if (r && r.credential) {
         // Recuperar la huella única del dispositivo local
         const deviceId = obtenerOGenerarDeviceId();
-        const devName = obtenerNombreAmigable();  // ← YA CORREGIDO
+        const devName = obtenerNombreAmigable();  // ← Ya devolverá "Android Celular" o "Android Tablet"
 
         // Construir la URL con el token JWT Y el deviceId obligatorio
         const urlFinal = B + "?token=" + encodeURIComponent(r.credential) + 
