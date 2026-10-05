@@ -104,43 +104,43 @@
       const uaLower = ua.toLowerCase();
 
       // 1. Identificar el Navegador con sus siglas (incluyendo Desconocido [ND])
-let navegador = "ND";
-if (uaLower.includes("edg/")) {
-  navegador = "ED";
-} else if (uaLower.includes("opr/") || uaLower.includes("opera")) {
-  navegador = "OP";
-} else if (uaLower.includes("samsungbrowser/")) {
-  navegador = "SB";
-} else if (uaLower.includes("chrome/")) {
-  navegador = "CH";
-} else if (uaLower.includes("safari/") && !uaLower.includes("chrome")) {
-  navegador = "SF";
-} else if (uaLower.includes("firefox/")) {
-  navegador = "FF";
-}
-
-// 2. Identificar la plataforma y fusionarla con el navegador detectado
-if (uaLower.includes("android")) {
-  const esTablet = uaLower.includes("tablet") || (Math.min(window.screen.width, window.screen.height) >= 600 && !uaLower.includes("mobile"));
-  return esTablet ? `Android Tablet (\({navegador})` : `Android Celular (\){navegador})`;
-}
-if (uaLower.includes("iphone") || uaLower.includes("ipod")) {
-  return `iPhone (${navegador})`;
-}
-if (uaLower.includes("ipad")) {
-  return `iPad (${navegador})`;
-}
-if (uaLower.includes("windows")) {
-  return `Windows (${navegador})`;
-}
-if (uaLower.includes("mac os") || uaLower.includes("macintosh")) {
-  return `MacOS (${navegador})`;
-}
-if (uaLower.includes("linux")) {
-  return `Linux (${navegador})`;
-}
-
-return `Navegador Web (${navegador})`;
+      let navegador = "ND";
+      if (uaLower.includes("edg/")) {
+        navegador = "ED";
+      } else if (uaLower.includes("opr/") || uaLower.includes("opera")) {
+        navegador = "OP";
+      } else if (uaLower.includes("samsungbrowser/")) {
+        navegador = "SB";
+      } else if (uaLower.includes("chrome/")) {
+        navegador = "CH";
+      } else if (uaLower.includes("safari/") && !uaLower.includes("chrome")) {
+        navegador = "SF";
+      } else if (uaLower.includes("firefox/")) {
+        navegador = "FF";
+      }
+      
+      // 2. Identificar la plataforma y fusionarla con el navegador detectado
+      if (uaLower.includes("android")) {
+        const esTablet = uaLower.includes("tablet") || (Math.min(window.screen.width, window.screen.height) >= 600 && !uaLower.includes("mobile"));
+        return esTablet ? `Android Tablet (\({navegador})` : `Android Celular (\){navegador})`;
+      }
+      if (uaLower.includes("iphone") || uaLower.includes("ipod")) {
+        return `iPhone (${navegador})`;
+      }
+      if (uaLower.includes("ipad")) {
+        return `iPad (${navegador})`;
+      }
+      if (uaLower.includes("windows")) {
+        return `Windows (${navegador})`;
+      }
+      if (uaLower.includes("mac os") || uaLower.includes("macintosh")) {
+        return `MacOS (${navegador})`;
+      }
+      if (uaLower.includes("linux")) {
+        return `Linux (${navegador})`;
+      }
+      
+      return `Navegador Web (${navegador})`;
 
     /**
      * Obtiene o genera una huella única (deviceId) persistente para este navegador/dispositivo.
