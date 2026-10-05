@@ -104,19 +104,19 @@
       const uaLower = ua.toLowerCase();
 
       // 1. Identificar el Navegador con sus siglas (Samsung va primero para evitar que caiga en Chrome)
-      let navegador = "[ND]";
+      let navegador = "ND";
       if (uaLower.includes("samsungbrowser")) {
-        navegador = "[SI]";
+        navegador = "SI";
       } else if (uaLower.includes("edg/")) {
-        navegador = "[ED]";
+        navegador = "ED";
       } else if (uaLower.includes("opr/") || uaLower.includes("opera")) {
-        navegador = "[OP]";
+        navegador = "OP";
       } else if (uaLower.includes("chrome/")) {
-        navegador = "[CH]";
+        navegador = "CH";
       } else if (uaLower.includes("safari/") && !uaLower.includes("chrome")) {
-        navegador = "[SF]";
+        navegador = "SF";
       } else if (uaLower.includes("firefox/")) {
-        navegador = "[FF]";
+        navegador = "FF";
       }
 
       // 2. Identificar la plataforma y fusionarla con el navegador detectado
@@ -143,26 +143,37 @@
       return `Navegador Web (${navegador})`;
     }
 
-    /**
-     * Genera un identificador único matemático y determinista basado en las características físicas 
-     * del dispositivo y del navegador (huella digital estable), respaldado por localStorage.
+   /**
+     * Genera un identificador único 100% determinista y estable con la sintaxis exacta:
+     * DEV-[HashPrincipal]-[HashSecundarioEstable]
+     * Basado exclusivamente en características físicas del navegador y pantalla, sin fechas.
      */
     function obtenerOGenerarDeviceId() {
       let deviceId = localStorage.getItem('cn_device_id');
+      
       if (!deviceId) {
-        // Combinar atributos estables del hardware/pantalla/navegador
-        const rawFingerprint = `${navigator.userAgent}|${screen.width}x${screen.height}|${screen.colorDepth}|${navigator.language}`;
-        
-        // Hash matemático rápido para convertir los atributos en una cadena alfanumérica fija y limpia
-        let hash = 0;
-        for (let i = 0; i < rawFingerprint.length; i++) {
-          const char = rawFingerprint.charCodeAt(i);
-          hash = ((hash << 5) - hash) + char;
-          hash |= 0; // Forzar a entero de 32 bits
+        // 1. Hash Principal (basado en UserAgent e Idioma)
+        const rawPrincipal = `${navigator.userAgent}|${navigator.language}`;
+        let h1 = 0;
+        for (let i = 0; i < rawPrincipal.length; i++) {
+          const char = rawPrincipal.charCodeAt(i);
+          h1 = ((h1 << 5) - h1) + char;
+          h1 |= 0; // Forzar a entero de 32 bits
         }
+        const hashPrincipal = Math.abs(h1).toString(36).toUpperCase();
         
-        const hashHex = Math.abs(hash).toString(36).toUpperCase();
-        deviceId = `DEV-${hashHex}`;
+        // 2. Hash Secundario Estable (basado en resolución, profundidad de color y plataforma, 100% estático)
+        const rawSecundario = `${screen.width}x${screen.height}|${screen.colorDepth}|${navigator.platform || 'WEB'}`;
+        let h2 = 0;
+        for (let i = 0; i < rawSecundario.length; i++) {
+          const char = rawSecundario.charCodeAt(i);
+          h2 = ((h2 << 5) - h2) + char;
+          h2 |= 0; // Forzar a entero de 32 bits
+        }
+        const hashSecundarioEstable = Math.abs(h2).toString(36).toUpperCase();
+        
+        // Estructura exacta requerida: DEV-[HashPrincipal]-[HashSecundarioEstable]
+        deviceId = `DEV-${hashPrincipal}-${hashSecundarioEstable}`;
         localStorage.setItem('cn_device_id', deviceId);
       }
       return deviceId;
@@ -174,16 +185,14 @@
       m.innerText = "Validando credenciales y dispositivo... redirigiendo.";
       
       if (r && r.credential) {
-        // Recuperar o calcular la huella digital matemática única del equipo
         const deviceId = obtenerOGenerarDeviceId();
         const devName = obtenerNombreAmigable();
 
-        // Construir la URL con el token JWT, el deviceId matemático y el nombre amigable
+        // Construir la URL con el token, el deviceId estructurado y el nombre amigable
         const urlFinal = B + "?token=" + encodeURIComponent(r.credential) + 
                              "&deviceId=" + encodeURIComponent(deviceId) + 
                              "&devName=" + encodeURIComponent(devName);
 
-        // Transmitir al Web App de Apps Script
         window.location.href = urlFinal;
       } else {
         m.style.color = "#d32f2f";
