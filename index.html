@@ -93,7 +93,7 @@
   </div>
 
 <script>
-    const A = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
+   const A = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
     const B = "https://script.google.com/macros/s/AKfycbwPZqOcUt4K1l0WiekV1Dq8a8ZsqdWKT3B634GtELYIjdeMtex6gqK-LFTB9e0T5ESBFg/exec";
 
     /**
@@ -144,14 +144,25 @@
     }
 
     /**
-     * Obtiene o genera una huella única (deviceId) persistente para este navegador/dispositivo.
+     * Obtiene o genera una huella única (deviceId) persistente, 
+     * respetando estrictamente la fuente de verdad del JSON del servidor.
      */
     function obtenerOGenerarDeviceId() {
-      let deviceId = localStorage.getItem('cn_device_id');
+      // 1. Prioridad absoluta: El ID oficial inyectado por el servidor (si existe)
+      let deviceId = (typeof window.SERVER_DEVICE_ID !== 'undefined' && window.SERVER_DEVICE_ID) ? window.SERVER_DEVICE_ID : null;
+
+      // 2. Si el servidor no lo inyectó, leemos lo que tenga el almacenamiento local
+      if (!deviceId) {
+        deviceId = localStorage.getItem('cn_device_id');
+      }
+
+      // 3. Solo si no existe en ningún lado (dispositivo totalmente nuevo/virgen), generamos uno preliminar
       if (!deviceId) {
         deviceId = 'DEV-' + Math.random().toString(36).substring(2, 9).toUpperCase() + '-' + Date.now();
-        localStorage.setItem('cn_device_id', deviceId);
       }
+
+      // Asegurar que el almacenamiento local siempre guarde el ganador definitivo
+      localStorage.setItem('cn_device_id', deviceId);
       return deviceId;
     }
 
@@ -161,9 +172,9 @@
       m.innerText = "Validando credenciales y dispositivo... redirigiendo.";
       
       if (r && r.credential) {
-        // Recuperar la huella única del dispositivo local
+        // Recuperar la huella única del dispositivo local respetando el JSON
         const deviceId = obtenerOGenerarDeviceId();
-        const devName = obtenerNombreAmigable();  // ← Ya devolverá correctamente "Android Celular (SB)" o similar
+        const devName = obtenerNombreAmigable();
 
         // Construir la URL con el token JWT Y el deviceId obligatorio
         const urlFinal = B + "?token=" + encodeURIComponent(r.credential) + 
