@@ -172,11 +172,14 @@
       m.innerText = "Validando credenciales y dispositivo... redirigiendo.";
       
       if (r && r.credential) {
-        // Recuperar la huella única del dispositivo local respetando el JSON
+        // 1. Recuperar la huella y el ID
         const deviceId = obtenerOGenerarDeviceId();
+        
+        // 2. ⭐ Calcular el nombre amigable y GUARDARLO de inmediato en localStorage
         const devName = obtenerNombreAmigable();
+        localStorage.setItem('cn_device_name', devName);
 
-        // Construir la URL con el token JWT Y el deviceId obligatorio
+        // 3. Construir la URL con el token JWT, deviceId y devName
         const urlFinal = B + "?token=" + encodeURIComponent(r.credential) + 
                              "&deviceId=" + encodeURIComponent(deviceId) + 
                              "&devName=" + encodeURIComponent(devName);
