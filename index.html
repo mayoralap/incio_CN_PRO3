@@ -97,13 +97,36 @@
     const B = "https://script.google.com/macros/s/AKfycbwPZqOcUt4K1l0WiekV1Dq8a8ZsqdWKT3B634GtELYIjdeMtex6gqK-LFTB9e0T5ESBFg/exec";
 
     /**
+     * 1. Generador de huella digital nativa (Vive y muere en el Frontend de GitHub)
+     */
+    function generarHuellaDigitalNativa() {
+      const nav = window.navigator;
+      const scr = window.screen;
+      const rawString = [
+        nav.userAgent,
+        nav.language,
+        scr.colorDepth,
+        scr.width + 'x' + scr.height,
+        new Date().getTimezoneOffset(),
+        nav.hardwareConcurrency || 'unknown'
+      ].join('|');
+
+      let hash = 0;
+      for (let i = 0; i < rawString.length; i++) {
+        const char = rawString.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash |= 0;
+      }
+      return 'FP-' + Math.abs(hash).toString(36).toUpperCase();
+    }
+
+    /**
      * Devuelve un nombre amigable del dispositivo y navegador según el User-Agent.
      */
     function obtenerNombreAmigable() {
       const ua = navigator.userAgent;
       const uaLower = ua.toLowerCase();
 
-      // 1. Identificar el Navegador con sus siglas (incluyendo Desconocido [ND])
       let navegador = "ND";
       if (uaLower.includes("edg/")) {
         navegador = "ED";
@@ -119,7 +142,6 @@
         navegador = "FF";
       }
 
-      // 2. Identificar la plataforma y fusionarla con el navegador detectado
       if (uaLower.includes("android")) {
         const esTablet = uaLower.includes("tablet") || (Math.min(window.screen.width, window.screen.height) >= 600 && !uaLower.includes("mobile"));
         return esTablet ? `Android Tablet (${navegador})` : `Android Celular (${navegador})`;
@@ -144,24 +166,19 @@
     }
 
     /**
-     * Obtiene o genera una huella única (deviceId) persistente, 
-     * respetando estrictamente la fuente de verdad del JSON del servidor.
+     * Obtiene o genera una huella única (deviceId) persistente.
      */
     function obtenerOGenerarDeviceId() {
-      // 1. Prioridad absoluta: El ID oficial inyectado por el servidor (si existe)
       let deviceId = (typeof window.SERVER_DEVICE_ID !== 'undefined' && window.SERVER_DEVICE_ID) ? window.SERVER_DEVICE_ID : null;
 
-      // 2. Si el servidor no lo inyectó, leemos lo que tenga el almacenamiento local
       if (!deviceId) {
         deviceId = localStorage.getItem('cn_device_id');
       }
 
-      // 3. Solo si no existe en ningún lado (dispositivo totalmente nuevo/virgen), generamos uno preliminar
       if (!deviceId) {
         deviceId = 'DEV-' + Math.random().toString(36).substring(2, 9).toUpperCase() + '-' + Date.now();
       }
 
-      // Asegurar que el almacenamiento local siempre guarde el ganador definitivo
       localStorage.setItem('cn_device_id', deviceId);
       return deviceId;
     }
@@ -172,19 +189,21 @@
       m.innerText = "Validando credenciales y dispositivo... redirigiendo.";
       
       if (r && r.credential) {
-        // 1. Recuperar la huella y el ID
+        // 1. Recuperar el deviceId y la huella nativa en el cliente de GitHub
         const deviceId = obtenerOGenerarDeviceId();
+        const huellaDigital = generarHuellaDigitalNativa();
         
-        // 2. ⭐ Calcular el nombre amigable y GUARDARLO de inmediato en localStorage
+        // 2. Calcular el nombre amigable y GUARDARLO en localStorage
         const devName = obtenerNombreAmigable();
         localStorage.setItem('cn_device_name', devName);
 
-        // 3. Construir la URL con el token JWT, deviceId y devName
+        // 3. Construir la URL completa con todos los parámetros listos para el backend
         const urlFinal = B + "?token=" + encodeURIComponent(r.credential) + 
                              "&deviceId=" + encodeURIComponent(deviceId) + 
-                             "&devName=" + encodeURIComponent(devName);
+                             "&devName=" + encodeURIComponent(devName) +
+                             "&huellaDigital=" + encodeURIComponent(huellaDigital);
 
-        // Transmitir al Web App de Apps Script
+        // Transmitir al Web App de Apps Script en un solo viaje limpio
         window.location.href = urlFinal;
       } else {
         m.style.color = "#d32f2f";
