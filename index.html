@@ -212,6 +212,33 @@
     }
 
     function inicializarGIS() {
+      // Detección automática: Si corre dentro de la APK móvil / WebView de Capacitor
+      const isCapacitor = (window.Capacitor !== undefined && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) || navigator.userAgent.includes('wv');
+
+      if (isCapacitor) {
+        // En la app móvil, usamos el plugin nativo de Browser expuesto por Capacitor
+        document.getElementById("buttonDiv").innerHTML = `
+            <button id="btnNativoGoogle" style="
+                background: #1a73e8; color: white; padding: 14px 28px; border-radius: 6px; 
+                border: none; cursor: pointer; text-decoration: none; font-weight: 500; display: inline-block; font-size: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                Acceder con Google (Navegador)
+            </button>
+        `;
+        
+        document.getElementById("btnNativoGoogle").addEventListener("click", () => {
+          if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
+            window.Capacitor.Plugins.Browser.open({ url: 'https://www.pro.columbanotebook.com/etapas-y-procesos' });
+          } else {
+            // Plan B por si el plugin tarda un milisegundo en cargar
+            window.open('https://www.pro.columbanotebook.com/etapas-y-procesos', '_system');
+          }
+        });
+
+        document.getElementById('mensaje').innerText = "Toca el botón para abrir el acceso seguro en tu navegador.";
+        return;
+      }
+
+      // En computadoras y navegadores web normales de escritorio, corre el SDK original de Google
       if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
         setTimeout(inicializarGIS, 100);
         return;
