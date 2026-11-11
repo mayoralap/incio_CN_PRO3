@@ -189,21 +189,17 @@
       m.innerText = "Validando credenciales y dispositivo... redirigiendo.";
       
       if (r && r.credential) {
-        // 1. Recuperar el deviceId y la huella nativa en el cliente de GitHub
         const deviceId = obtenerOGenerarDeviceId();
         const huellaDigital = generarHuellaDigitalNativa();
         
-        // 2. Calcular el nombre amigable y GUARDARLO en localStorage
         const devName = obtenerNombreAmigable();
         localStorage.setItem('cn_device_name', devName);
 
-        // 3. Construir la URL completa con todos los parámetros listos para el backend
         const urlFinal = B + "?token=" + encodeURIComponent(r.credential) + 
-                             "&deviceId=" + encodeURIComponent(deviceId) + 
-                             "&devName=" + encodeURIComponent(devName) +
-                             "&huellaDigital=" + encodeURIComponent(huellaDigital);
+                               "&deviceId=" + encodeURIComponent(deviceId) + 
+                               "&devName=" + encodeURIComponent(devName) +
+                               "&huellaDigital=" + encodeURIComponent(huellaDigital);
 
-        // Transmitir al Web App de Apps Script en un solo viaje limpio
         window.location.href = urlFinal;
       } else {
         m.style.color = "#d32f2f";
@@ -212,6 +208,22 @@
     }
 
     function inicializarGIS() {
+      // Detección automática: Si corre dentro de la APK móvil / WebView
+      const isCapacitor = window.Capacitor !== undefined || navigator.userAgent.includes('wv');
+
+      if (isCapacitor) {
+        // En la app móvil mostramos un botón directo y limpio compatible con el entorno nativo
+        document.getElementById("buttonDiv").innerHTML = `
+            <a href="${B}?action=login_externo" target="_system" style="
+                background: #1a73e8; color: white; padding: 12px 24px; border-radius: 6px; 
+                text-decoration: none; font-weight: 500; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                Acceder con Google
+            </a>
+        `;
+        return;
+      }
+
+      // En computadoras y navegadores web normales, corre el SDK original de Google sin alteraciones
       if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
         setTimeout(inicializarGIS, 100);
         return;
