@@ -92,8 +92,54 @@
     <div id="mensaje"></div>
   </div>
 
+<script type="module">
+    import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+
+    // Inicializar el plugin nativo si corre dentro de la APK de Android
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+        GoogleAuth.initialize({
+            clientId: "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com",
+            scopes: ['profile', 'email'],
+            grantOfflineAccess: true,
+        });
+    }
+
+    // Función de inicio de sesión exclusiva para dispositivos móviles (Android APK)
+    window.iniciarSesionMovil = async function() {
+        const m = document.getElementById('mensaje');
+        try {
+            m.style.color = "var(--color-primary)";
+            m.innerText = "Autenticando de forma nativa en el dispositivo...";
+
+            const googleUser = await GoogleAuth.signIn();
+            
+            if (googleUser && googleUser.authentication && googleUser.authentication.idToken) {
+                const credential = googleUser.authentication.idToken;
+                const deviceId = obtenerOGenerarDeviceId();
+                const huellaDigital = generarHuellaDigitalNativa();
+                const devName = obtenerNombreAmigable();
+                
+                localStorage.setItem('cn_device_name', devName);
+
+                const urlFinal = B + "?token=" + encodeURIComponent(credential) + 
+                                       "&deviceId=" + encodeURIComponent(deviceId) + 
+                                       "&devName=" + encodeURIComponent(devName) +
+                                       "&huellaDigital=" + encodeURIComponent(huellaDigital);
+
+                window.location.href = urlFinal;
+            } else {
+                throw new Error("No se obtuvo la credencial de Google.");
+            }
+        } catch (err) {
+            console.error("Error en login nativo:", err);
+            m.style.color = "#d32f2f";
+            m.innerText = "Error al iniciar sesión en el móvil: " + (err.message || err);
+        }
+    };
+</script>
+
 <script>
-   const A = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
+    const A = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
     const B = "https://script.google.com/macros/s/AKfycbzVa5uJzZM8D1Dsw8KNGUampVRkSTdJ5cEAqUaQaysm8Noq4yhGmtXafGVHG6zxiUpqJA/exec";
 
     /**
@@ -189,21 +235,16 @@
       m.innerText = "Validando credenciales y dispositivo... redirigiendo.";
       
       if (r && r.credential) {
-        // 1. Recuperar el deviceId y la huella nativa en el cliente de GitHub
         const deviceId = obtenerOGenerarDeviceId();
         const huellaDigital = generarHuellaDigitalNativa();
-        
-        // 2. Calcular el nombre amigable y GUARDARLO en localStorage
         const devName = obtenerNombreAmigable();
         localStorage.setItem('cn_device_name', devName);
 
-        // 3. Construir la URL completa con todos los parámetros listos para el backend
         const urlFinal = B + "?token=" + encodeURIComponent(r.credential) + 
                              "&deviceId=" + encodeURIComponent(deviceId) + 
                              "&devName=" + encodeURIComponent(devName) +
                              "&huellaDigital=" + encodeURIComponent(huellaDigital);
 
-        // Transmitir al Web App de Apps Script en un solo viaje limpio
         window.location.href = urlFinal;
       } else {
         m.style.color = "#d32f2f";
@@ -212,33 +253,26 @@
     }
 
     function inicializarGIS() {
-      // Detección automática: Si corre dentro de la APK móvil / WebView de Capacitor
-      const isCapacitor = (window.Capacitor !== undefined && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) || navigator.userAgent.includes('wv');
+      // Detección automática de la plataforma nativa (APK móvil)
+      const isCapacitor = window.Capacitor !== undefined && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
 
       if (isCapacitor) {
-        // En la app móvil, usamos el plugin nativo de Browser expuesto por Capacitor
-        document.getElementById("buttonDiv").innerHTML = `
-            <button id="btnNativoGoogle" style="
-                background: #1a73e8; color: white; padding: 14px 28px; border-radius: 6px; 
-                border: none; cursor: pointer; text-decoration: none; font-weight: 500; display: inline-block; font-size: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                Acceder con Google (Navegador)
+        const buttonDiv = document.getElementById("buttonDiv");
+        if (buttonDiv) {
+          buttonDiv.innerHTML = `
+            <button onclick="window.iniciarSesionMovil()" style="
+                background: #1a73e8; color: white; padding: 12px 24px; border-radius: 6px; 
+                border: none; cursor: pointer; font-weight: 500; display: inline-block; font-size: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                Acceder con Google (Móvil)
             </button>
-        `;
-        
-        document.getElementById("btnNativoGoogle").addEventListener("click", () => {
-          if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
-            window.Capacitor.Plugins.Browser.open({ url: 'https://www.pro.columbanotebook.com/etapas-y-procesos' });
-          } else {
-            // Plan B por si el plugin tarda un milisegundo en cargar
-            window.open('https://www.pro.columbanotebook.com/etapas-y-procesos', '_system');
-          }
-        });
-
-        document.getElementById('mensaje').innerText = "Toca el botón para abrir el acceso seguro en tu navegador.";
+          `;
+        }
+        const m = document.getElementById('mensaje');
+        if (m) m.innerText = "Toca el botón para iniciar sesión en tu dispositivo móvil.";
         return;
       }
 
-      // En computadoras y navegadores web normales de escritorio, corre el SDK original de Google
+      // Escritorio / Navegador web normal (SDK clásico de Google)
       if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
         setTimeout(inicializarGIS, 100);
         return;
