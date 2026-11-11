@@ -189,17 +189,21 @@
       m.innerText = "Validando credenciales y dispositivo... redirigiendo.";
       
       if (r && r.credential) {
+        // 1. Recuperar el deviceId y la huella nativa en el cliente de GitHub
         const deviceId = obtenerOGenerarDeviceId();
         const huellaDigital = generarHuellaDigitalNativa();
         
+        // 2. Calcular el nombre amigable y GUARDARLO en localStorage
         const devName = obtenerNombreAmigable();
         localStorage.setItem('cn_device_name', devName);
 
+        // 3. Construir la URL completa con todos los parámetros listos para el backend
         const urlFinal = B + "?token=" + encodeURIComponent(r.credential) + 
-                               "&deviceId=" + encodeURIComponent(deviceId) + 
-                               "&devName=" + encodeURIComponent(devName) +
-                               "&huellaDigital=" + encodeURIComponent(huellaDigital);
+                             "&deviceId=" + encodeURIComponent(deviceId) + 
+                             "&devName=" + encodeURIComponent(devName) +
+                             "&huellaDigital=" + encodeURIComponent(huellaDigital);
 
+        // Transmitir al Web App de Apps Script en un solo viaje limpio
         window.location.href = urlFinal;
       } else {
         m.style.color = "#d32f2f";
@@ -207,44 +211,30 @@
       }
     }
 
-    // Detección automática: Si corre dentro de la APK móvil / WebView
-    const isCapacitor = window.Capacitor !== undefined || navigator.userAgent.includes('wv');
-
-    if (isCapacitor) {
-        // En la app móvil, el botón abre tu plataforma directamente en Google Chrome (fuera del WebView)
-        document.getElementById("buttonDiv").innerHTML = `
-            <a href="https://www.pro.columbanotebook.com/etapas-y-procesos" target="_system" style="
-                background: #1a73e8; color: white; padding: 14px 28px; border-radius: 6px; 
-                text-decoration: none; font-weight: 500; display: inline-block; font-size: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                Acceder con Google
-            </a>
-        `;
-        document.getElementById('mensaje').innerText = "Toca el botón para iniciar sesión de forma segura en tu navegador.";
-        return;
-    }
-
-    // En computadoras y navegadores web normales de escritorio, corre el SDK original de Google
-    if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
+    function inicializarGIS() {
+      if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
         setTimeout(inicializarGIS, 100);
         return;
-    }
+      }
 
-    try {
+      try {
         google.accounts.id.initialize({
-            client_id: A,
-            callback: C,
-            context: "signin",
-            ux_mode: "popup",
-            auto_select: false,
-            use_fedcm_for_prompt: false
+          client_id: A,
+          callback: C,
+          context: "signin",
+          ux_mode: "popup",
+          auto_select: false,
+          use_fedcm_for_prompt: false
         });
 
         google.accounts.id.renderButton(
-            document.getElementById("buttonDiv"),
-            { theme: "outline", size: "large", text: "signin_with", shape: "rectangular", width: "290" }
+          document.getElementById("buttonDiv"),
+          { theme: "outline", size: "large", text: "signin_with", shape: "rectangular", width: "290" }
         );
-    } catch (err) {
+
+      } catch (err) {
         console.error("Error al inicializar Google Identity:", err);
+      }
     }
 
     window.addEventListener('load', inicializarGIS);
