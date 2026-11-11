@@ -207,46 +207,44 @@
       }
     }
 
-    function inicializarGIS() {
-      // Detección automática: Si corre dentro de la APK móvil / WebView
-      const isCapacitor = window.Capacitor !== undefined || navigator.userAgent.includes('wv');
+    // Detección automática: Si corre dentro de la APK móvil / WebView
+    const isCapacitor = window.Capacitor !== undefined || navigator.userAgent.includes('wv');
 
-      if (isCapacitor) {
-        // En la app móvil mostramos un botón directo y limpio compatible con el entorno nativo
+    if (isCapacitor) {
+        // En la app móvil, el botón abre tu plataforma directamente en Google Chrome (fuera del WebView)
         document.getElementById("buttonDiv").innerHTML = `
-            <a href="${B}?action=login_externo" target="_system" style="
-                background: #1a73e8; color: white; padding: 12px 24px; border-radius: 6px; 
-                text-decoration: none; font-weight: 500; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+            <a href="https://www.pro.columbanotebook.com/etapas-y-procesos" target="_system" style="
+                background: #1a73e8; color: white; padding: 14px 28px; border-radius: 6px; 
+                text-decoration: none; font-weight: 500; display: inline-block; font-size: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                 Acceder con Google
             </a>
         `;
+        document.getElementById('mensaje').innerText = "Toca el botón para iniciar sesión de forma segura en tu navegador.";
         return;
-      }
+    }
 
-      // En computadoras y navegadores web normales, corre el SDK original de Google sin alteraciones
-      if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
+    // En computadoras y navegadores web normales de escritorio, corre el SDK original de Google
+    if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
         setTimeout(inicializarGIS, 100);
         return;
-      }
+    }
 
-      try {
+    try {
         google.accounts.id.initialize({
-          client_id: A,
-          callback: C,
-          context: "signin",
-          ux_mode: "popup",
-          auto_select: false,
-          use_fedcm_for_prompt: false
+            client_id: A,
+            callback: C,
+            context: "signin",
+            ux_mode: "popup",
+            auto_select: false,
+            use_fedcm_for_prompt: false
         });
 
         google.accounts.id.renderButton(
-          document.getElementById("buttonDiv"),
-          { theme: "outline", size: "large", text: "signin_with", shape: "rectangular", width: "290" }
+            document.getElementById("buttonDiv"),
+            { theme: "outline", size: "large", text: "signin_with", shape: "rectangular", width: "290" }
         );
-
-      } catch (err) {
+    } catch (err) {
         console.error("Error al inicializar Google Identity:", err);
-      }
     }
 
     window.addEventListener('load', inicializarGIS);
