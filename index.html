@@ -253,42 +253,44 @@
     }
 
     function inicializarGIS() {
-  // Detección automática de la plataforma nativa (APK móvil)
+
   const isCapacitor =
     window.Capacitor !== undefined &&
     window.Capacitor.isNativePlatform &&
     window.Capacitor.isNativePlatform();
 
+  // DIAGNÓSTICO
+  const m = document.getElementById('mensaje');
+  if (m) {
+    m.innerHTML =
+      "Capacitor detectado: <b>" + isCapacitor + "</b>";
+  }
+
+  // APK Android
   if (isCapacitor) {
+
     const buttonDiv = document.getElementById("buttonDiv");
 
     if (buttonDiv) {
       buttonDiv.innerHTML = `
         <button onclick="window.iniciarSesionMovil()" style="
-            background: #1a73e8;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-weight: 500;
-            display: inline-block;
-            font-size: 1rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-            Acceder con Google (Móvil)
+          background:#1a73e8;
+          color:white;
+          padding:12px 24px;
+          border-radius:6px;
+          border:none;
+          cursor:pointer;
+          font-weight:500;
+          font-size:1rem;">
+          Acceder con Google (Móvil)
         </button>
       `;
-    }
-
-    const m = document.getElementById('mensaje');
-    if (m) {
-      m.innerText = "Toca el botón para iniciar sesión en tu dispositivo móvil.";
     }
 
     return;
   }
 
-  // Escritorio / Navegador web normal (SDK clásico de Google)
+  // WEB
   if (
     typeof google === 'undefined' ||
     !google.accounts ||
@@ -320,11 +322,13 @@
       }
     );
 
-    // NUEVA LÍNEA DE PRUEBA
-    google.accounts.id.prompt();
-
   } catch (err) {
-    console.error("Error al inicializar Google Identity:", err);
+
+    if (m) {
+      m.innerHTML = "Error: " + err.message;
+    }
+
+    console.error(err);
   }
 }
 
