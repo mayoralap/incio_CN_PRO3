@@ -254,19 +254,14 @@
 
     function inicializarGIS() {
 
-  const isCapacitor =
-    window.Capacitor !== undefined &&
-    window.Capacitor.isNativePlatform &&
-    window.Capacitor.isNativePlatform();
+  const isCapacitor = true;
 
-  // DIAGNÓSTICO
   const m = document.getElementById('mensaje');
   if (m) {
     m.innerHTML =
       "Capacitor detectado: <b>" + isCapacitor + "</b>";
   }
 
-  // APK Android
   if (isCapacitor) {
 
     const buttonDiv = document.getElementById("buttonDiv");
@@ -274,15 +269,15 @@
     if (buttonDiv) {
       buttonDiv.innerHTML = `
         <button onclick="window.iniciarSesionMovil()" style="
-          background:#1a73e8;
-          color:white;
-          padding:12px 24px;
-          border-radius:6px;
-          border:none;
-          cursor:pointer;
-          font-weight:500;
-          font-size:1rem;">
-          Acceder con Google (Móvil)
+            background:#1a73e8;
+            color:white;
+            padding:12px 24px;
+            border-radius:6px;
+            border:none;
+            cursor:pointer;
+            font-weight:500;
+            font-size:1rem;">
+            Acceder con Google (Móvil)
         </button>
       `;
     }
