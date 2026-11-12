@@ -92,214 +92,193 @@
     <div id="mensaje"></div>
   </div>
 
-<script type="module">
-    import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
-
-    // Inicializar el plugin nativo si corre dentro de la APK de Android
-    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-        GoogleAuth.initialize({
-            clientId: "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com",
-            scopes: ['profile', 'email'],
-            grantOfflineAccess: true,
-        });
-    }
-
-    // Función de inicio de sesión exclusiva para dispositivos móviles (Android APK)
-    window.iniciarSesionMovil = async function() {
-        const m = document.getElementById('mensaje');
-        try {
-            m.style.color = "var(--color-primary)";
-            m.innerText = "Autenticando de forma nativa en el dispositivo...";
-
-            const googleUser = await GoogleAuth.signIn();
-            
-            if (googleUser && googleUser.authentication && googleUser.authentication.idToken) {
-                const credential = googleUser.authentication.idToken;
-                const deviceId = obtenerOGenerarDeviceId();
-                const huellaDigital = generarHuellaDigitalNativa();
-                const devName = obtenerNombreAmigable();
-                
-                localStorage.setItem('cn_device_name', devName);
-
-                const urlFinal = B + "?token=" + encodeURIComponent(credential) + 
-                                       "&deviceId=" + encodeURIComponent(deviceId) + 
-                                       "&devName=" + encodeURIComponent(devName) +
-                                       "&huellaDigital=" + encodeURIComponent(huellaDigital);
-
-                window.location.href = urlFinal;
-            } else {
-                throw new Error("No se obtuvo la credencial de Google.");
-            }
-        } catch (err) {
-            console.error("Error en login nativo:", err);
-            m.style.color = "#d32f2f";
-            m.innerText = "Error al iniciar sesión en el móvil: " + (err.message || err);
-        }
-    };
-</script>
-
 <script>
-    const A = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
-    const B = "https://script.google.com/macros/s/AKfycbzVa5uJzZM8D1Dsw8KNGUampVRkSTdJ5cEAqUaQaysm8Noq4yhGmtXafGVHG6zxiUpqJA/exec";
+const A = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
+const B = "https://script.google.com/macros/s/AKfycbzVa5uJzZM8D1Dsw8KNGUampVRkSTdJ5cEAqUaQaysm8Noq4yhGmtXafGVHG6zxiUpqJA/exec";
 
-    /**
-     * 1. Generador de huella digital nativa (Vive y muere en el Frontend de GitHub)
-     */
-    function generarHuellaDigitalNativa() {
-      const nav = window.navigator;
-      const scr = window.screen;
-      const rawString = [
-        nav.userAgent,
-        nav.language,
-        scr.colorDepth,
-        scr.width + 'x' + scr.height,
-        new Date().getTimezoneOffset(),
-        nav.hardwareConcurrency || 'unknown'
-      ].join('|');
+function generarHuellaDigitalNativa() {
+  const nav = window.navigator;
+  const scr = window.screen;
 
-      let hash = 0;
-      for (let i = 0; i < rawString.length; i++) {
-        const char = rawString.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash |= 0;
+  const rawString = [
+    nav.userAgent,
+    nav.language,
+    scr.colorDepth,
+    scr.width + 'x' + scr.height,
+    new Date().getTimezoneOffset(),
+    nav.hardwareConcurrency || 'unknown'
+  ].join('|');
+
+  let hash = 0;
+
+  for (let i = 0; i < rawString.length; i++) {
+    const char = rawString.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0;
+  }
+
+  return 'FP-' + Math.abs(hash).toString(36).toUpperCase();
+}
+
+function obtenerNombreAmigable() {
+  const ua = navigator.userAgent;
+  const uaLower = ua.toLowerCase();
+
+  let navegador = "ND";
+
+  if (uaLower.includes("edg/")) {
+    navegador = "ED";
+  } else if (uaLower.includes("opr/") || uaLower.includes("opera")) {
+    navegador = "OP";
+  } else if (uaLower.includes("samsungbrowser/")) {
+    navegador = "SB";
+  } else if (uaLower.includes("chrome/")) {
+    navegador = "CH";
+  } else if (uaLower.includes("safari/") && !uaLower.includes("chrome")) {
+    navegador = "SF";
+  } else if (uaLower.includes("firefox/")) {
+    navegador = "FF";
+  }
+
+  if (uaLower.includes("android")) {
+    const esTablet =
+      uaLower.includes("tablet") ||
+      (Math.min(window.screen.width, window.screen.height) >= 600 &&
+       !uaLower.includes("mobile"));
+
+    return esTablet
+      ? `Android Tablet (${navegador})`
+      : `Android Celular (${navegador})`;
+  }
+
+  if (uaLower.includes("iphone") || uaLower.includes("ipod")) {
+    return `iPhone (${navegador})`;
+  }
+
+  if (uaLower.includes("ipad")) {
+    return `iPad (${navegador})`;
+  }
+
+  if (uaLower.includes("windows")) {
+    return `Windows (${navegador})`;
+  }
+
+  if (uaLower.includes("mac os") || uaLower.includes("macintosh")) {
+    return `MacOS (${navegador})`;
+  }
+
+  if (uaLower.includes("linux")) {
+    return `Linux (${navegador})`;
+  }
+
+  return `Navegador Web (${navegador})`;
+}
+
+function obtenerOGenerarDeviceId() {
+
+  let deviceId =
+    (typeof window.SERVER_DEVICE_ID !== 'undefined' &&
+      window.SERVER_DEVICE_ID)
+      ? window.SERVER_DEVICE_ID
+      : null;
+
+  if (!deviceId) {
+    deviceId = localStorage.getItem('cn_device_id');
+  }
+
+  if (!deviceId) {
+    deviceId =
+      'DEV-' +
+      Math.random().toString(36).substring(2, 9).toUpperCase() +
+      '-' +
+      Date.now();
+  }
+
+  localStorage.setItem('cn_device_id', deviceId);
+
+  return deviceId;
+}
+
+function C(r) {
+
+  const m = document.getElementById('mensaje');
+
+  m.style.color = "var(--color-primary)";
+  m.innerText = "Validando credenciales y dispositivo... redirigiendo.";
+
+  if (r && r.credential) {
+
+    const deviceId = obtenerOGenerarDeviceId();
+    const huellaDigital = generarHuellaDigitalNativa();
+    const devName = obtenerNombreAmigable();
+
+    localStorage.setItem('cn_device_name', devName);
+
+    const urlFinal =
+      B +
+      "?token=" + encodeURIComponent(r.credential) +
+      "&deviceId=" + encodeURIComponent(deviceId) +
+      "&devName=" + encodeURIComponent(devName) +
+      "&huellaDigital=" + encodeURIComponent(huellaDigital);
+
+    window.location.href = urlFinal;
+
+  } else {
+
+    m.style.color = "#d32f2f";
+    m.innerText = "Error: No se recibió una credencial válida de Google.";
+
+  }
+}
+
+function inicializarGIS() {
+
+  if (
+    typeof google === 'undefined' ||
+    !google.accounts ||
+    !google.accounts.id
+  ) {
+    setTimeout(inicializarGIS, 100);
+    return;
+  }
+
+  try {
+
+    google.accounts.id.initialize({
+      client_id: A,
+      callback: C,
+      context: "signin",
+      ux_mode: "popup",
+      auto_select: false
+    });
+
+    google.accounts.id.renderButton(
+      document.getElementById("buttonDiv"),
+      {
+        theme: "outline",
+        size: "large",
+        text: "signin_with",
+        shape: "rectangular",
+        width: "290"
       }
-      return 'FP-' + Math.abs(hash).toString(36).toUpperCase();
+    );
+
+  } catch (err) {
+
+    console.error("Error al inicializar Google Identity:", err);
+
+    const m = document.getElementById("mensaje");
+
+    if (m) {
+      m.style.color = "#d32f2f";
+      m.innerText = err.message || err;
     }
+  }
+}
 
-    /**
-     * Devuelve un nombre amigable del dispositivo y navegador según el User-Agent.
-     */
-    function obtenerNombreAmigable() {
-      const ua = navigator.userAgent;
-      const uaLower = ua.toLowerCase();
-
-      let navegador = "ND";
-      if (uaLower.includes("edg/")) {
-        navegador = "ED";
-      } else if (uaLower.includes("opr/") || uaLower.includes("opera")) {
-        navegador = "OP";
-      } else if (uaLower.includes("samsungbrowser/")) {
-        navegador = "SB";
-      } else if (uaLower.includes("chrome/")) {
-        navegador = "CH";
-      } else if (uaLower.includes("safari/") && !uaLower.includes("chrome")) {
-        navegador = "SF";
-      } else if (uaLower.includes("firefox/")) {
-        navegador = "FF";
-      }
-
-      if (uaLower.includes("android")) {
-        const esTablet = uaLower.includes("tablet") || (Math.min(window.screen.width, window.screen.height) >= 600 && !uaLower.includes("mobile"));
-        return esTablet ? `Android Tablet (${navegador})` : `Android Celular (${navegador})`;
-      }
-      if (uaLower.includes("iphone") || uaLower.includes("ipod")) {
-        return `iPhone (${navegador})`;
-      }
-      if (uaLower.includes("ipad")) {
-        return `iPad (${navegador})`;
-      }
-      if (uaLower.includes("windows")) {
-        return `Windows (${navegador})`;
-      }
-      if (uaLower.includes("mac os") || uaLower.includes("macintosh")) {
-        return `MacOS (${navegador})`;
-      }
-      if (uaLower.includes("linux")) {
-        return `Linux (${navegador})`;
-      }
-
-      return `Navegador Web (${navegador})`;
-    }
-
-    /**
-     * Obtiene o genera una huella única (deviceId) persistente.
-     */
-    function obtenerOGenerarDeviceId() {
-      let deviceId = (typeof window.SERVER_DEVICE_ID !== 'undefined' && window.SERVER_DEVICE_ID) ? window.SERVER_DEVICE_ID : null;
-
-      if (!deviceId) {
-        deviceId = localStorage.getItem('cn_device_id');
-      }
-
-      if (!deviceId) {
-        deviceId = 'DEV-' + Math.random().toString(36).substring(2, 9).toUpperCase() + '-' + Date.now();
-      }
-
-      localStorage.setItem('cn_device_id', deviceId);
-      return deviceId;
-    }
-
-    function C(r) {
-      const m = document.getElementById('mensaje');
-      m.style.color = "var(--color-primary)";
-      m.innerText = "Validando credenciales y dispositivo... redirigiendo.";
-      
-      if (r && r.credential) {
-        const deviceId = obtenerOGenerarDeviceId();
-        const huellaDigital = generarHuellaDigitalNativa();
-        const devName = obtenerNombreAmigable();
-        localStorage.setItem('cn_device_name', devName);
-
-        const urlFinal = B + "?token=" + encodeURIComponent(r.credential) + 
-                             "&deviceId=" + encodeURIComponent(deviceId) + 
-                             "&devName=" + encodeURIComponent(devName) +
-                             "&huellaDigital=" + encodeURIComponent(huellaDigital);
-
-        window.location.href = urlFinal;
-      } else {
-        m.style.color = "#d32f2f";
-        m.innerText = "Error: No se recibió una credencial válida de Google.";
-      }
-    }
-
-    function inicializarGIS() {
-      // Detección automática de la plataforma nativa (APK móvil)
-      const isCapacitor = window.Capacitor !== undefined && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
-
-      if (isCapacitor) {
-        const buttonDiv = document.getElementById("buttonDiv");
-        if (buttonDiv) {
-          buttonDiv.innerHTML = `
-            <button onclick="window.iniciarSesionMovil()" style="
-                background: #1a73e8; color: white; padding: 12px 24px; border-radius: 6px; 
-                border: none; cursor: pointer; font-weight: 500; display: inline-block; font-size: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                Acceder con Google (Móvil)
-            </button>
-          `;
-        }
-        const m = document.getElementById('mensaje');
-        if (m) m.innerText = "Toca el botón para iniciar sesión en tu dispositivo móvil.";
-        return;
-      }
-
-      // Escritorio / Navegador web normal (SDK clásico de Google)
-      if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
-        setTimeout(inicializarGIS, 100);
-        return;
-      }
-
-      try {
-        google.accounts.id.initialize({
-          client_id: A,
-          callback: C,
-          context: "signin",
-          ux_mode: "popup",
-          auto_select: false,
-          use_fedcm_for_prompt: false
-        });
-
-        google.accounts.id.renderButton(
-          document.getElementById("buttonDiv"),
-          { theme: "outline", size: "large", text: "signin_with", shape: "rectangular", width: "290" }
-        );
-
-      } catch (err) {
-        console.error("Error al inicializar Google Identity:", err);
-      }
-    }
-
-    window.addEventListener('load', inicializarGIS);
+window.addEventListener("load", inicializarGIS);
 </script>
+
 
 </body>
 </html>
