@@ -95,22 +95,7 @@
 <script>
 const A = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
 const B = "https://script.google.com/macros/s/AKfycbzVa5uJzZM8D1Dsw8KNGUampVRkSTdJ5cEAqUaQaysm8Noq4yhGmtXafGVHG6zxiUpqJA/exec";
-  
-window.addEventListener("load", () => {
-
-  const mensaje = document.getElementById("mensaje");
-
-  if (mensaje) {
-    mensaje.innerHTML =
-      "<b>Capacitor:</b> " +
-      (window.Capacitor ? "SI" : "NO") +
-      "<br><br><b>UserAgent:</b><br>" +
-      navigator.userAgent;
-  }
-
-});
-  
-  
+   
 function generarHuellaDigitalNativa() {
   const nav = window.navigator;
   const scr = window.screen;
