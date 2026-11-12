@@ -253,52 +253,82 @@
     }
 
     function inicializarGIS() {
-      // Detección automática de la plataforma nativa (APK móvil)
-      const isCapacitor = window.Capacitor !== undefined && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+  // Detección automática de la plataforma nativa (APK móvil)
+  const isCapacitor =
+    window.Capacitor !== undefined &&
+    window.Capacitor.isNativePlatform &&
+    window.Capacitor.isNativePlatform();
 
-      if (isCapacitor) {
-        const buttonDiv = document.getElementById("buttonDiv");
-        if (buttonDiv) {
-          buttonDiv.innerHTML = `
-            <button onclick="window.iniciarSesionMovil()" style="
-                background: #1a73e8; color: white; padding: 12px 24px; border-radius: 6px; 
-                border: none; cursor: pointer; font-weight: 500; display: inline-block; font-size: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                Acceder con Google (Móvil)
-            </button>
-          `;
-        }
-        const m = document.getElementById('mensaje');
-        if (m) m.innerText = "Toca el botón para iniciar sesión en tu dispositivo móvil.";
-        return;
-      }
+  if (isCapacitor) {
+    const buttonDiv = document.getElementById("buttonDiv");
 
-      // Escritorio / Navegador web normal (SDK clásico de Google)
-      if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
-        setTimeout(inicializarGIS, 100);
-        return;
-      }
-
-      try {
-        google.accounts.id.initialize({
-          client_id: A,
-          callback: C,
-          context: "signin",
-          ux_mode: "popup",
-          auto_select: false,
-          use_fedcm_for_prompt: false
-        });
-
-        google.accounts.id.renderButton(
-          document.getElementById("buttonDiv"),
-          { theme: "outline", size: "large", text: "signin_with", shape: "rectangular", width: "290" }
-        );
-
-      } catch (err) {
-        console.error("Error al inicializar Google Identity:", err);
-      }
+    if (buttonDiv) {
+      buttonDiv.innerHTML = `
+        <button onclick="window.iniciarSesionMovil()" style="
+            background: #1a73e8;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-block;
+            font-size: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+            Acceder con Google (Móvil)
+        </button>
+      `;
     }
 
-    window.addEventListener('load', inicializarGIS);
+    const m = document.getElementById('mensaje');
+    if (m) {
+      m.innerText = "Toca el botón para iniciar sesión en tu dispositivo móvil.";
+    }
+
+    return;
+  }
+
+  // Escritorio / Navegador web normal (SDK clásico de Google)
+  if (
+    typeof google === 'undefined' ||
+    !google.accounts ||
+    !google.accounts.id
+  ) {
+    setTimeout(inicializarGIS, 100);
+    return;
+  }
+
+  try {
+
+    google.accounts.id.initialize({
+      client_id: A,
+      callback: C,
+      context: "signin",
+      ux_mode: "popup",
+      auto_select: false,
+      use_fedcm_for_prompt: false
+    });
+
+    google.accounts.id.renderButton(
+      document.getElementById("buttonDiv"),
+      {
+        theme: "outline",
+        size: "large",
+        text: "signin_with",
+        shape: "rectangular",
+        width: "290"
+      }
+    );
+
+    // NUEVA LÍNEA DE PRUEBA
+    google.accounts.id.prompt();
+
+  } catch (err) {
+    console.error("Error al inicializar Google Identity:", err);
+  }
+}
+
+window.addEventListener('load', inicializarGIS);
 </script>
 
 </body>
