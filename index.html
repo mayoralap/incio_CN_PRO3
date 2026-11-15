@@ -223,31 +223,26 @@
       try {
         mostrarAviso("Analizando entorno de ejecución...");
 
-        // 1. Detectar si el User-Agent lleva nuestra firma nativa
+        // Detectar si el User-Agent lleva nuestra firma nativa de la APK
         const ua = navigator.userAgent;
         const isNativeApp = ua.includes("ColumbaAppNative");
-        
-        mostrarAviso("User-Agent detectado: " + ua.substring(0, 40) + "...");
 
         if (isNativeApp) {
-          mostrarAviso("¡Modo App Nativo detectado con éxito!");
+          mostrarAviso("Modo App Nativo detectado: Adaptando botón para navegador externo.");
           
-          // Si estamos en la APK, inyectamos el botón directo al navegador del sistema
+          // En la APK, transformamos el botón para que saque al usuario al Chrome real del teléfono
           const buttonDiv = document.getElementById("buttonDiv");
           if (buttonDiv) {
             buttonDiv.innerHTML = `
-              <button class="btn-fallback" onclick="lanzarLoginExterno()" style="width: 290px; height: 42px; background: #1a73e8; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
-                Continuar con Google (Navegador)
+              <button onclick="lanzarLoginExterno()" style="width: 290px; height: 42px; background: #1a73e8; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                Iniciar sesión con Google (Navegador)
               </button>`;
           }
           return;
         }
 
-        // 2. Entorno Web Estándar (PC o navegador normal)
-        mostrarAviso("Modo Web Estándar: Cargando Google Identity...");
-
+        // Entorno Web Estándar (PC o PWA en computadora): Funciona exactamente igual que siempre
         if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
-          mostrarAviso("Esperando librería de Google...");
           setTimeout(inicializarGIS, 200);
           return;
         }
@@ -266,13 +261,17 @@
           { theme: "outline", size: "large", text: "signin_with", shape: "rectangular", width: "290" }
         );
 
-        mostrarAviso("¡Botón de Google renderizado correctamente!");
-
       } catch (err) {
         console.error("Error al inicializar:", err);
         mostrarAviso("Excepción: " + err.message, true);
-        alert("Excepción capturada en inicializarGIS: " + err.message);
       }
+    }
+
+    // Función que saca el flujo del WebView estricto de la APK y lo abre en el Chrome del dispositivo
+    function lanzarLoginExterno() {
+      const urlDestino = "https://mayoralap.github.io/incio_CN_PRO3/?v=68";
+      // Forzar apertura en el navegador externo del sistema Android
+      window.open(urlDestino, "_system");
     }
 
    function lanzarLoginExterno() {
