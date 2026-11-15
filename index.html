@@ -275,9 +275,20 @@
       }
     }
 
-    function lanzarLoginExterno() {
-      mostrarAviso("Abriendo navegador del sistema...");
-      window.open("https://mayoralap.github.io/incio_CN_PRO3/", "_system");
+   function lanzarLoginExterno() {
+      mostrarAviso("Abriendo el navegador del sistema...");
+      
+      const urlDestino = "https://mayoralap.github.io/incio_CN_PRO3/";
+
+      // Detectar si estamos en Android nativo para forzar la apertura en Chrome externo
+      const ua = navigator.userAgent;
+      if (ua.includes("ColumbaAppNative") || ua.includes("Android")) {
+        // Intent oficial de Android para forzar la apertura en el navegador Chrome del celular
+        window.location.href = "intent://" + urlDestino.replace("https://", "") + "#Intent;scheme=https;package=com.android.chrome;end";
+      } else {
+        // Si por alguna razón se abre en PC o navegador normal
+        window.open(urlDestino, "_blank");
+      }
     }
 
     window.addEventListener('load', () => {
