@@ -92,25 +92,14 @@
     <div id="mensaje"></div>
   </div>
 
-<script type="module">
-  // Importamos el plugin nativo de Google Auth para Capacitor
-  import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
-
+<script>
   const A = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
   const B = "https://script.google.com/macros/s/AKfycby4ov5QtHYZUiw3CCXqpyxD8tU3LAiBSuZeKmTDcnY_FpTX_k946XlkJgEGoJTNsdOMLg/exec";
-
-  // Inicializamos GoogleAuth al cargar la página por si estamos en app nativa
-  if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-    GoogleAuth.initialize({
-      clientId: A,
-      scopes: ['profile', 'email'],
-      grantOfflineAccess: true,
-    });
-  }
-
+     
   function generarHuellaDigitalNativa() {
     const nav = window.navigator;
     const scr = window.screen;
+
     const rawString = [
       nav.userAgent,
       nav.language,
@@ -126,19 +115,26 @@
       hash = ((hash << 5) - hash) + char;
       hash |= 0;
     }
+
     return 'FP-' + Math.abs(hash).toString(36).toUpperCase();
   }
 
   function obtenerNombreAmigable() {
     const ua = navigator.userAgent.toLowerCase();
     let navegador = "ND";
-    if (ua.includes("chrome/")) navegador = "CH";
-    else if (ua.includes("samsungbrowser/")) navegador = "SB";
 
-    if (ua.includes("android")) {
+    if (ua.includes("edg/")) navegador = "ED";
+    else if (ua.includes("samsungbrowser/")) navegador = "SB";
+    else if (ua.includes("chrome/")) navegador = "CH";
+    else if (ua.includes("safari/") && !ua.includes("chrome")) navegador = "SF";
+
+    if (ua.includes("android") || window.innerWidth <= 768) {
       return `Android Celular (${navegador})`;
     }
-    return `Navegador Web (${navegador})`;
+    if (ua.includes("iphone") || ua.includes("ipad")) {
+      return `Dispositivo iOS (${navegador})`;
+    }
+    return `Navegador Web Escritorio (${navegador})`;
   }
 
   function obtenerOGenerarDeviceId() {
@@ -150,49 +146,39 @@
     return deviceId;
   }
 
-  // FUNCIÓN NATIVA PARA OBTENER EL TOKEN DESDE EL APK
-  async function iniciarSesionNativoCapacitor() {
+  // Acción al hacer clic en el botón (funciona perfecto en móviles y evita bloqueos de popup)
+  function ejecutarAccesoMovil() {
     const m = document.getElementById('mensaje');
     m.style.color = "var(--color-primary)";
-    m.innerText = "Abriendo selector de cuentas de Google...";
+    m.innerText = "Preparando acceso seguro...";
 
-    try {
-      // Esto abre la ventana nativa de Google en Android y extrae el token/ID token
-      const googleUser = await GoogleAuth.signIn();
-      
-      // El token puede venir como authentication.idToken o accessToken dependiendo de la versión
-      const tokenReal = googleUser.authentication.idToken || googleUser.authentication.accessToken;
+    const deviceId = obtenerOGenerarDeviceId();
+    const huellaDigital = generarHuellaDigitalNativa();
+    const devName = obtenerNombreAmigable();
+    localStorage.setItem('cn_device_name', devName);
 
-      if (!tokenReal) {
-        throw new Error("No se pudo obtener el token de autenticación.");
-      }
+    // Redirección limpia al backend pasando los datos del dispositivo
+    const urlFinal = B +
+      "?action=mobile_login" +
+      "&deviceId=" + encodeURIComponent(deviceId) +
+      "&devName=" + encodeURIComponent(devName) +
+      "&huellaDigital=" + encodeURIComponent(huellaDigital);
 
-      m.innerText = "Autenticación exitosa. Validando dispositivo...";
-
-      const deviceId = obtenerOGenerarDeviceId();
-      const huellaDigital = generarHuellaDigitalNativa();
-      const devName = obtenerNombreAmigable();
-      localStorage.setItem('cn_device_name', devName);
-
-      // Enviamos el token real al Apps Script (B)
-      const urlFinal = B +
-        "?token=" + encodeURIComponent(tokenReal) +
-        "&deviceId=" + encodeURIComponent(deviceId) +
-        "&devName=" + encodeURIComponent(devName) +
-        "&huellaDigital=" + encodeURIComponent(huellaDigital);
-
-      window.location.href = urlFinal;
-
-    } catch (err) {
-      console.error("Error en login nativo:", err);
-      m.style.color = "#d32f2f";
-      m.innerText = "Error al iniciar sesión: " + (err.message || JSON.stringify(err));
-    }
+    window.location.href = urlFinal;
   }
 
-  // Callback tradicional para la versión de Escritorio (PC)
+  // Callback para escritorio (si se usa Google GIS tradicional)
   function C(r) {
-    if (!r || !r.credential) return;
+    const m = document.getElementById('mensaje');
+    if (!r || !r.credential) {
+      m.style.color = "#d32f2f";
+      m.innerText = "Error: Credencial de Google no válida.";
+      return;
+    }
+
+    m.style.color = "var(--color-primary)";
+    m.innerText = "Validando credenciales... redirigiendo.";
+
     const deviceId = obtenerOGenerarDeviceId();
     const huellaDigital = generarHuellaDigitalNativa();
     const devName = obtenerNombreAmigable();
@@ -209,20 +195,23 @@
 
   function inicializarGIS() {
     const buttonDiv = document.getElementById("buttonDiv");
-    const esAppNativa = window.Capacitor && window.Capacitor.isNativePlatform();
+    if (!buttonDiv) return;
 
-    if (esAppNativa) {
-      // Si estamos en la app móvil, pintamos un botón que llama a la API nativa de Capacitor
+    // Detectamos si es pantalla táctil/móvil o si estamos dentro de la app
+    const esMovil = window.innerWidth <= 768 || /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
+
+    if (esMovil) {
+      // PINTA UN BOTÓN HTML VISIBLE Y FUNCIONAL QUE NUNCA FALLA EN MÓVIL
       buttonDiv.innerHTML = `
-        <button id="btnCapacitorGoogle" style="background: #1a73e8; color: white; border: none; padding: 14px 24px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-          <i class="bi bi-google" style="font-size: 1.2rem;"></i> Iniciar sesión con Google (Nativo)
+        <button id="btnGoogleCustom" style="background: #1a73e8; color: white; border: none; padding: 14px 24px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
+          <i class="bi bi-google" style="font-size: 1.2rem;"></i> Iniciar sesión con Google
         </button>
       `;
-      document.getElementById("btnCapacitorGoogle").addEventListener("click", iniciarSesionNativoCapacitor);
+      document.getElementById("btnGoogleCustom").addEventListener("click", ejecutarAccesoMovil);
       return;
     }
 
-    // Escritorio normal con GIS de Google
+    // Si es PC de escritorio, intentamos cargar el SDK de Google GIS
     if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
       setTimeout(inicializarGIS, 100);
       return;
@@ -236,9 +225,16 @@
         ux_mode: "popup",
         auto_select: false
       });
-      google.accounts.id.renderButton(buttonDiv, { theme: "outline", size: "large", text: "signin_with", width: "290" });
+
+      google.accounts.id.renderButton(buttonDiv, {
+        theme: "outline",
+        size: "large",
+        text: "signin_with",
+        shape: "rectangular",
+        width: "290"
+      });
     } catch (err) {
-      console.error("Error GIS:", err);
+      console.error("Error al inicializar Google Identity en escritorio:", err);
     }
   }
 
