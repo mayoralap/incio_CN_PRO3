@@ -131,9 +131,8 @@
     else if (uaLower.includes("safari/") && !uaLower.includes("chrome")) navegador = "SF";
     else if (uaLower.includes("firefox/")) navegador = "FF";
 
-    if (uaLower.includes("android")) {
-      const esTablet = uaLower.includes("tablet") || (Math.min(window.screen.width, window.screen.height) >= 600 && !uaLower.includes("mobile"));
-      return esTablet ? `Android Tablet (${navegador})` : `Android Celular (${navegador})`;
+    if (uaLower.includes("android") || window.innerWidth <= 768) {
+      return `Android Celular (${navegador})`;
     }
     if (uaLower.includes("iphone") || uaLower.includes("ipod")) return `iPhone (${navegador})`;
     if (uaLower.includes("ipad")) return `iPad (${navegador})`;
@@ -154,18 +153,17 @@
     return deviceId;
   }
 
-  // Función para manejar el acceso directo en móviles donde el popup está bloqueado
+  // Función de acceso directo para móviles
   function iniciarSesionMovil() {
     const m = document.getElementById('mensaje');
     m.style.color = "var(--color-primary)";
-    m.innerText = "Preparando acceso...";
+    m.innerText = "Abriendo acceso...";
 
     const deviceId = obtenerOGenerarDeviceId();
     const huellaDigital = generarHuellaDigitalNativa();
     const devName = obtenerNombreAmigable();
     localStorage.setItem('cn_device_name', devName);
 
-    // Redirigimos directamente al Apps Script pasando los datos del dispositivo
     const urlFinal = B +
       "?action=mobile_login" +
       "&deviceId=" + encodeURIComponent(deviceId) +
@@ -180,12 +178,12 @@
     
     if (!r || !r.credential) {
       m.style.color = "#d32f2f";
-      m.innerText = "Acceso denegado: No se detectó una credencial de Google válida.";
+      m.innerText = "Acceso denegado: No se detectó una credencial válida.";
       return; 
     }
 
     m.style.color = "var(--color-primary)";
-    m.innerText = "Validando credenciales y dispositivo... redirigiendo.";
+    m.innerText = "Validando credenciales... redirigiendo.";
 
     const deviceId = obtenerOGenerarDeviceId();
     const huellaDigital = generarHuellaDigitalNativa();
@@ -202,13 +200,13 @@
   }
 
   function inicializarGIS() {
-    // Detectamos si estamos corriendo dentro del celular (APK o entorno móvil)
-    const esMovil = /android|iphone|ipad|ipod/i.test(navigator.userAgent) || window.Capacitor;
-
     const buttonDiv = document.getElementById("buttonDiv");
 
-    if (esMovil) {
-      // Si estamos en el móvil, dibujamos un botón táctil grande que sí interactúa con el sistema
+    // Forzamos el botón táctil si el ancho de pantalla es menor a 768px (pantalla de celular)
+    // o si el navegador contiene indicios móviles. Esto garantiza que en tu app de Android aparezca siempre.
+    const esPantallaMovil = window.innerWidth <= 768 || /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
+
+    if (esPantallaMovil) {
       buttonDiv.innerHTML = `
         <button id="btnMovilGoogle" style="background: #1a73e8; color: white; border: none; padding: 14px 24px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
           <i class="bi bi-google" style="font-size: 1.2rem;"></i> Iniciar sesión con Google
@@ -218,7 +216,7 @@
       return;
     }
 
-    // Si estamos en la PC de escritorio, cargamos el botón oficial de Google de forma normal
+    // Escritorio normal
     if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
       setTimeout(inicializarGIS, 100);
       return;
