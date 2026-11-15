@@ -214,12 +214,12 @@
 
     function inicializarGIS() {
       try {
-        // Diagnóstico en pantalla y alerta para saber en qué entorno estamos corriendo
-        const isNativeApp = window.Capacitor && window.Capacitor.isNativePlatform();
-        console.log("Entorno nativo detectado:", isNativeApp);
+        // Detectar si el User-Agent contiene nuestra firma nativa
+        const isNativeApp = navigator.userAgent.includes("ColumbaAppNative");
+        console.log("¿Es app nativa?:", isNativeApp);
 
         if (isNativeApp) {
-          // Si estamos en la APK, inyectamos un botón alternativo directo para evitar el bloqueo del popup
+          // Si estamos en la APK, mostramos el botón directo al navegador externo
           const buttonDiv = document.getElementById("buttonDiv");
           if (buttonDiv) {
             buttonDiv.innerHTML = `
@@ -229,11 +229,11 @@
           }
           const m = document.getElementById('mensaje');
           m.style.color = "#5f6368";
-          m.innerText = "Modo App Nativo: Usa el botón superior para autenticarte.";
+          m.innerText = "Modo App Nativo detectado correctamente.";
           return;
         }
 
-        // Entorno Web Estándar (GitHub Pages en PC/Navegador móvil)
+        // Entorno Web Estándar (PC o navegador normal)
         if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
           setTimeout(inicializarGIS, 100);
           return;
@@ -255,7 +255,7 @@
 
       } catch (err) {
         console.error("Error al inicializar Google Identity:", err);
-        alert("Excepción capturada en inicializarGIS: " + err.message);
+        alert("Excepción capturada: " + err.message);
       }
     }
 
