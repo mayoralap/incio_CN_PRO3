@@ -92,7 +92,7 @@
     <div id="mensaje"></div>
   </div>
 
-<script type="module">
+<script>
   const A = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
   const B = "https://script.google.com/macros/s/AKfycby4ov5QtHYZUiw3CCXqpyxD8tU3LAiBSuZeKmTDcnY_FpTX_k946XlkJgEGoJTNsdOMLg/exec";
      
@@ -154,15 +154,33 @@
     return deviceId;
   }
 
-  // Función de validación y envío de credenciales con control de seguridad estricto
+  // Función para manejar el acceso directo en móviles donde el popup está bloqueado
+  function iniciarSesionMovil() {
+    const m = document.getElementById('mensaje');
+    m.style.color = "var(--color-primary)";
+    m.innerText = "Preparando acceso...";
+
+    const deviceId = obtenerOGenerarDeviceId();
+    const huellaDigital = generarHuellaDigitalNativa();
+    const devName = obtenerNombreAmigable();
+    localStorage.setItem('cn_device_name', devName);
+
+    // Redirigimos directamente al Apps Script pasando los datos del dispositivo
+    const urlFinal = B +
+      "?action=mobile_login" +
+      "&deviceId=" + encodeURIComponent(deviceId) +
+      "&devName=" + encodeURIComponent(devName) +
+      "&huellaDigital=" + encodeURIComponent(huellaDigital);
+
+    window.location.href = urlFinal;
+  }
+
   function C(r) {
     const m = document.getElementById('mensaje');
     
-    // VALIDACIÓN CRÍTICA: Si no hay credencial, detenemos todo en seco para evitar que avance vacío
     if (!r || !r.credential) {
       m.style.color = "#d32f2f";
       m.innerText = "Acceso denegado: No se detectó una credencial de Google válida.";
-      console.error("Intento de avance sin credencial bloqueado.");
       return; 
     }
 
@@ -184,6 +202,23 @@
   }
 
   function inicializarGIS() {
+    // Detectamos si estamos corriendo dentro del celular (APK o entorno móvil)
+    const esMovil = /android|iphone|ipad|ipod/i.test(navigator.userAgent) || window.Capacitor;
+
+    const buttonDiv = document.getElementById("buttonDiv");
+
+    if (esMovil) {
+      // Si estamos en el móvil, dibujamos un botón táctil grande que sí interactúa con el sistema
+      buttonDiv.innerHTML = `
+        <button id="btnMovilGoogle" style="background: #1a73e8; color: white; border: none; padding: 14px 24px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+          <i class="bi bi-google" style="font-size: 1.2rem;"></i> Iniciar sesión con Google
+        </button>
+      `;
+      document.getElementById("btnMovilGoogle").addEventListener("click", iniciarSesionMovil);
+      return;
+    }
+
+    // Si estamos en la PC de escritorio, cargamos el botón oficial de Google de forma normal
     if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
       setTimeout(inicializarGIS, 100);
       return;
@@ -195,12 +230,11 @@
         callback: C,
         context: "signin",
         ux_mode: "popup",
-        auto_select: false,        // Evita que el sistema elija una cuenta automáticamente
-        cancel_on_tap_outside: false // Evita que se cierre si el usuario toca fuera por error
+        auto_select: false
       });
 
       google.accounts.id.renderButton(
-        document.getElementById("buttonDiv"),
+        buttonDiv,
         {
           theme: "outline",
           size: "large",
@@ -209,16 +243,6 @@
           width: "290"
         }
       );
-
-      // FORZAR EL PROMPT: Esto obliga a Google a mostrar el selector de cuentas 
-      // de manera explícita en cuanto la página termina de cargar el script, 
-      // rompiendo el "salto" automático que te está bloqueando en el móvil.
-      google.accounts.id.prompt((notification) => {
-        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          console.log("El prompt automático fue bloqueado o saltado, se requiere clic manual en el botón.");
-        }
-      });
-
     } catch (err) {
       console.error("Error al inicializar Google Identity:", err);
       const m = document.getElementById("mensaje");
