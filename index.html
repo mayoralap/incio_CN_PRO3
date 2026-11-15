@@ -110,6 +110,16 @@
     const A = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
     const B = "https://script.google.com/macros/s/AKfycby4ov5QtHYZUiw3CCXqpyxD8tU3LAiBSuZeKmTDcnY_FpTX_k946XlkJgEGoJTNsdOMLg/exec";
 
+    // Función auxiliar para mostrar mensajes claros en pantalla (tipo Toast visual)
+    function mostrarAviso(texto, esError = false) {
+      const m = document.getElementById('mensaje');
+      if (m) {
+        m.style.color = esError ? "#d32f2f" : "var(--color-primary)";
+        m.innerText = texto;
+      }
+      console.log("AVISO:", texto);
+    }
+
     function generarHuellaDigitalNativa() {
       const nav = window.navigator;
       const scr = window.screen;
@@ -189,9 +199,7 @@
     }
 
     function C(r) {
-      const m = document.getElementById('mensaje');
-      m.style.color = "var(--color-primary)";
-      m.innerText = "Validando credenciales y dispositivo... redirigiendo.";
+      mostrarAviso("Validando credenciales y dispositivo... redirigiendo.");
       
       if (r && r.credential) {
         const deviceId = obtenerOGenerarDeviceId();
@@ -206,36 +214,41 @@
 
         window.location.href = urlFinal;
       } else {
-        m.style.color = "#d32f2f";
-        m.innerText = "Error: No se recibió una credencial válida de Google.";
+        mostrarAviso("Error: No se recibió una credencial válida de Google.", true);
         alert("Error de credencial GIS: " + JSON.stringify(r));
       }
     }
 
     function inicializarGIS() {
       try {
-        // Detectar si el User-Agent contiene nuestra firma nativa
-        const isNativeApp = navigator.userAgent.includes("ColumbaAppNative");
-        console.log("¿Es app nativa?:", isNativeApp);
+        mostrarAviso("Analizando entorno de ejecución...");
+
+        // 1. Detectar si el User-Agent lleva nuestra firma nativa
+        const ua = navigator.userAgent;
+        const isNativeApp = ua.includes("ColumbaAppNative");
+        
+        mostrarAviso("User-Agent detectado: " + ua.substring(0, 40) + "...");
 
         if (isNativeApp) {
-          // Si estamos en la APK, mostramos el botón directo al navegador externo
+          mostrarAviso("¡Modo App Nativo detectado con éxito!");
+          
+          // Si estamos en la APK, inyectamos el botón directo al navegador del sistema
           const buttonDiv = document.getElementById("buttonDiv");
           if (buttonDiv) {
             buttonDiv.innerHTML = `
-              <button class="btn-fallback" onclick="lanzarLoginExterno()">
+              <button class="btn-fallback" onclick="lanzarLoginExterno()" style="width: 290px; height: 42px; background: #1a73e8; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
                 Continuar con Google (Navegador)
               </button>`;
           }
-          const m = document.getElementById('mensaje');
-          m.style.color = "#5f6368";
-          m.innerText = "Modo App Nativo detectado correctamente.";
           return;
         }
 
-        // Entorno Web Estándar (PC o navegador normal)
+        // 2. Entorno Web Estándar (PC o navegador normal)
+        mostrarAviso("Modo Web Estándar: Cargando Google Identity...");
+
         if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
-          setTimeout(inicializarGIS, 100);
+          mostrarAviso("Esperando librería de Google...");
+          setTimeout(inicializarGIS, 200);
           return;
         }
 
@@ -253,20 +266,23 @@
           { theme: "outline", size: "large", text: "signin_with", shape: "rectangular", width: "290" }
         );
 
+        mostrarAviso("¡Botón de Google renderizado correctamente!");
+
       } catch (err) {
-        console.error("Error al inicializar Google Identity:", err);
-        alert("Excepción capturada: " + err.message);
+        console.error("Error al inicializar:", err);
+        mostrarAviso("Excepción: " + err.message, true);
+        alert("Excepción capturada en inicializarGIS: " + err.message);
       }
     }
 
-    // Función auxiliar para abrir el flujo fuera del WebView si estamos en la APK
     function lanzarLoginExterno() {
-      alert("Abriendo navegador externo para autenticación segura...");
-      // Forzar la apertura del mismo sitio o pasarela de auth en el navegador nativo del sistema
+      mostrarAviso("Abriendo navegador del sistema...");
       window.open("https://mayoralap.github.io/incio_CN_PRO3/", "_system");
     }
 
-    window.addEventListener('load', inicializarGIS);
+    window.addEventListener('load', () => {
+      setTimeout(inicializarGIS, 300);
+    });
 </script>
 
 </body>
