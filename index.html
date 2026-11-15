@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Columba Notebook – Verificación de Identidad</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <style>
     :root {
@@ -66,28 +67,6 @@
       margin-bottom: 10px;
     }
 
-    .btn-google-pro {
-      background: #1a73e8;
-      color: white;
-      border: none;
-      padding: 14px 24px;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      width: 100%;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-      text-decoration: none;
-    }
-
-    .btn-google-pro:hover {
-      background: #1557b0;
-    }
-
     #mensaje {
       margin-top: 16px;
       font-weight: 500;
@@ -109,85 +88,156 @@
     <h2>Verificación de Identidad</h2>
     <p>Para verificar el estado de tu cuenta y mostrarte las opciones correspondientes, inicia sesión con Google.</p>
     
-    <!-- BOTÓN ESTÁTICO EN EL HTML: IMPOSIBLE QUE DESAPAREZCA -->
-    <div id="buttonDiv">
-      <button id="btnGoogleCustom" class="btn-google-pro" onclick="ejecutarAccesoMovil()">
-        <i class="bi bi-google" style="font-size: 1.2rem;"></i> Iniciar sesión con Google
-      </button>
-    </div>
-    
+    <div id="buttonDiv"></div>
     <div id="mensaje"></div>
   </div>
 
 <script>
-  const B = "https://script.google.com/macros/s/AKfycby4ov5QtHYZUiw3CCXqpyxD8tU3LAiBSuZeKmTDcnY_FpTX_k946XlkJgEGoJTNsdOMLg/exec";
-     
-  function generarHuellaDigitalNativa() {
-    const nav = window.navigator;
-    const scr = window.screen;
-    const rawString = [
-      nav.userAgent,
-      nav.language,
-      scr.colorDepth,
-      scr.width + 'x' + scr.height,
-      new Date().getTimezoneOffset(),
-      nav.hardwareConcurrency || 'unknown'
-    ].join('|');
+   const A = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
+    const B = "https://script.google.com/macros/s/AKfycbwPZqOcUt4K1l0WiekV1Dq8a8ZsqdWKT3B634GtELYIjdeMtex6gqK-LFTB9e0T5ESBFg/exec";
 
-    let hash = 0;
-    for (let i = 0; i < rawString.length; i++) {
-      const char = rawString.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash |= 0;
+    /**
+     * 1. Generador de huella digital nativa (Vive y muere en el Frontend de GitHub)
+     */
+    function generarHuellaDigitalNativa() {
+      const nav = window.navigator;
+      const scr = window.screen;
+      const rawString = [
+        nav.userAgent,
+        nav.language,
+        scr.colorDepth,
+        scr.width + 'x' + scr.height,
+        new Date().getTimezoneOffset(),
+        nav.hardwareConcurrency || 'unknown'
+      ].join('|');
+
+      let hash = 0;
+      for (let i = 0; i < rawString.length; i++) {
+        const char = rawString.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash |= 0;
+      }
+      return 'FP-' + Math.abs(hash).toString(36).toUpperCase();
     }
-    return 'FP-' + Math.abs(hash).toString(36).toUpperCase();
-  }
 
-  function obtenerNombreAmigable() {
-    const ua = navigator.userAgent.toLowerCase();
-    let navegador = "ND";
+    /**
+     * Devuelve un nombre amigable del dispositivo y navegador según el User-Agent.
+     */
+    function obtenerNombreAmigable() {
+      const ua = navigator.userAgent;
+      const uaLower = ua.toLowerCase();
 
-    if (ua.includes("edg/")) navegador = "ED";
-    else if (ua.includes("samsungbrowser/")) navegador = "SB";
-    else if (ua.includes("chrome/")) navegador = "CH";
-    else if (ua.includes("safari/") && !ua.includes("chrome")) navegador = "SF";
+      let navegador = "ND";
+      if (uaLower.includes("edg/")) {
+        navegador = "ED";
+      } else if (uaLower.includes("opr/") || uaLower.includes("opera")) {
+        navegador = "OP";
+      } else if (uaLower.includes("samsungbrowser/")) {
+        navegador = "SB";
+      } else if (uaLower.includes("chrome/")) {
+        navegador = "CH";
+      } else if (uaLower.includes("safari/") && !uaLower.includes("chrome")) {
+        navegador = "SF";
+      } else if (uaLower.includes("firefox/")) {
+        navegador = "FF";
+      }
 
-    if (ua.includes("android") || window.innerWidth <= 768) {
-      return `Android Celular (${navegador})`;
+      if (uaLower.includes("android")) {
+        const esTablet = uaLower.includes("tablet") || (Math.min(window.screen.width, window.screen.height) >= 600 && !uaLower.includes("mobile"));
+        return esTablet ? `Android Tablet (${navegador})` : `Android Celular (${navegador})`;
+      }
+      if (uaLower.includes("iphone") || uaLower.includes("ipod")) {
+        return `iPhone (${navegador})`;
+      }
+      if (uaLower.includes("ipad")) {
+        return `iPad (${navegador})`;
+      }
+      if (uaLower.includes("windows")) {
+        return `Windows (${navegador})`;
+      }
+      if (uaLower.includes("mac os") || uaLower.includes("macintosh")) {
+        return `MacOS (${navegador})`;
+      }
+      if (uaLower.includes("linux")) {
+        return `Linux (${navegador})`;
+      }
+
+      return `Navegador Web (${navegador})`;
     }
-    if (ua.includes("iphone") || ua.includes("ipad")) {
-      return `Dispositivo iOS (${navegador})`;
-    }
-    return `Navegador Web Escritorio (${navegador})`;
-  }
 
-  function obtenerOGenerarDeviceId() {
-    let deviceId = localStorage.getItem('cn_device_id');
-    if (!deviceId) {
-      deviceId = 'DEV-' + Math.random().toString(36).substring(2, 9).toUpperCase() + '-' + Date.now();
+    /**
+     * Obtiene o genera una huella única (deviceId) persistente.
+     */
+    function obtenerOGenerarDeviceId() {
+      let deviceId = (typeof window.SERVER_DEVICE_ID !== 'undefined' && window.SERVER_DEVICE_ID) ? window.SERVER_DEVICE_ID : null;
+
+      if (!deviceId) {
+        deviceId = localStorage.getItem('cn_device_id');
+      }
+
+      if (!deviceId) {
+        deviceId = 'DEV-' + Math.random().toString(36).substring(2, 9).toUpperCase() + '-' + Date.now();
+      }
+
       localStorage.setItem('cn_device_id', deviceId);
+      return deviceId;
     }
-    return deviceId;
-  }
 
-  function ejecutarAccesoMovil() {
-    const m = document.getElementById('mensaje');
-    m.style.color = "var(--color-primary)";
-    m.innerText = "Preparando acceso seguro...";
+    function C(r) {
+      const m = document.getElementById('mensaje');
+      m.style.color = "var(--color-primary)";
+      m.innerText = "Validando credenciales y dispositivo... redirigiendo.";
+      
+      if (r && r.credential) {
+        // 1. Recuperar el deviceId y la huella nativa en el cliente de GitHub
+        const deviceId = obtenerOGenerarDeviceId();
+        const huellaDigital = generarHuellaDigitalNativa();
+        
+        // 2. Calcular el nombre amigable y GUARDARLO en localStorage
+        const devName = obtenerNombreAmigable();
+        localStorage.setItem('cn_device_name', devName);
 
-    const deviceId = obtenerOGenerarDeviceId();
-    const huellaDigital = generarHuellaDigitalNativa();
-    const devName = obtenerNombreAmigable();
-    localStorage.setItem('cn_device_name', devName);
+        // 3. Construir la URL completa con todos los parámetros listos para el backend
+        const urlFinal = B + "?token=" + encodeURIComponent(r.credential) + 
+                             "&deviceId=" + encodeURIComponent(deviceId) + 
+                             "&devName=" + encodeURIComponent(devName) +
+                             "&huellaDigital=" + encodeURIComponent(huellaDigital);
 
-    const urlFinal = B +
-      "?action=mobile_login" +
-      "&deviceId=" + encodeURIComponent(deviceId) +
-      "&devName=" + encodeURIComponent(devName) +
-      "&huellaDigital=" + encodeURIComponent(huellaDigital);
+        // Transmitir al Web App de Apps Script en un solo viaje limpio
+        window.location.href = urlFinal;
+      } else {
+        m.style.color = "#d32f2f";
+        m.innerText = "Error: No se recibió una credencial válida de Google.";
+      }
+    }
 
-    window.location.href = urlFinal;
-  }
+    function inicializarGIS() {
+      if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
+        setTimeout(inicializarGIS, 100);
+        return;
+      }
+
+      try {
+        google.accounts.id.initialize({
+          client_id: A,
+          callback: C,
+          context: "signin",
+          ux_mode: "popup",
+          auto_select: false,
+          use_fedcm_for_prompt: false
+        });
+
+        google.accounts.id.renderButton(
+          document.getElementById("buttonDiv"),
+          { theme: "outline", size: "large", text: "signin_with", shape: "rectangular", width: "290" }
+        );
+
+      } catch (err) {
+        console.error("Error al inicializar Google Identity:", err);
+      }
+    }
+
+    window.addEventListener('load', inicializarGIS);
 </script>
 
 </body>
