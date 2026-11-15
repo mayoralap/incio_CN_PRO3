@@ -194,8 +194,9 @@
         client_id: A,
         callback: C,
         context: "signin",
-        ux_mode: "popup", // Mantenemos popup estándar que ya funciona perfecto en la web
-        auto_select: false
+        ux_mode: "popup",
+        auto_select: false,        // Evita que el sistema elija una cuenta automáticamente
+        cancel_on_tap_outside: false // Evita que se cierre si el usuario toca fuera por error
       });
 
       google.accounts.id.renderButton(
@@ -208,6 +209,16 @@
           width: "290"
         }
       );
+
+      // FORZAR EL PROMPT: Esto obliga a Google a mostrar el selector de cuentas 
+      // de manera explícita en cuanto la página termina de cargar el script, 
+      // rompiendo el "salto" automático que te está bloqueando en el móvil.
+      google.accounts.id.prompt((notification) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          console.log("El prompt automático fue bloqueado o saltado, se requiere clic manual en el botón.");
+        }
+      });
+
     } catch (err) {
       console.error("Error al inicializar Google Identity:", err);
       const m = document.getElementById("mensaje");
