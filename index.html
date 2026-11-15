@@ -159,30 +159,35 @@
 
   // Función para manejar el inicio de sesión nativo mediante el navegador del sistema
   async function iniciarSesionNativoApp() {
-      const m = document.getElementById('mensaje');
-      m.style.color = "var(--color-primary)";
-      m.innerText = "Abriendo autenticación...";
-  
-      const deviceId = obtenerOGenerarDeviceId();
-      const huellaDigital = generarHuellaDigitalNativa();
-      const devName = obtenerNombreAmigable();
-      localStorage.setItem('cn_device_name', devName);
-  
-      const authUrl = B + "?action=native_auth&deviceId=" + encodeURIComponent(deviceId) + "&devName=" + encodeURIComponent(devName) + "&huellaDigital=" + encodeURIComponent(huellaDigital);
-  
+    const m = document.getElementById('mensaje');
+    m.style.color = "var(--color-primary)";
+    m.innerText = "Preparando acceso...";
+
+    const deviceId = obtenerOGenerarDeviceId();
+    const huellaDigital = generarHuellaDigitalNativa();
+    const devName = obtenerNombreAmigable();
+    localStorage.setItem('cn_device_name', devName);
+
+    const authUrl = B + "?action=native_auth&deviceId=" + encodeURIComponent(deviceId) + "&devName=" + encodeURIComponent(devName) + "&huellaDigital=" + encodeURIComponent(huellaDigital);
+
+    // Detectamos de forma segura si estamos en Android nativo mediante el User-Agent del WebView
+    const esAndroidNativo = /android/i.test(navigator.userAgent) && (window.Capacitor || window.location.protocol === 'file:' || window.isNativeApp);
+
+    if (esAndroidNativo) {
+      // Si estamos en la app móvil, abrimos directamente la URL en el navegador externo del teléfono
+      // usando un enlace de redirección o forzando la apertura por esquema si el contenedor lo permite.
+      // O más sencillo y directo: redirigimos el WebView para que el sistema operativo intercepte el enlace web externo.
       try {
-        // Verificamos si el plugin nativo de Capacitor está disponible en el objeto global
-        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
-          await window.Capacitor.Plugins.Browser.open({ url: authUrl });
-        } else {
-          // Fallback si corre en entorno web normal
-          window.location.href = authUrl;
-        }
-      } catch (err) {
-        // Si falla el plugin, usamos redirección directa del navegador del WebView
         window.location.href = authUrl;
+      } catch (err) {
+        m.style.color = "#d32f2f";
+        m.innerText = "No se pudo abrir el enlace de autenticación.";
       }
+    } else {
+      // Comportamiento normal en PC
+      window.location.href = authUrl;
     }
+  }
 
   function C(r) {
     const m = document.getElementById('mensaje');
