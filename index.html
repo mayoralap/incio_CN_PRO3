@@ -267,25 +267,16 @@
       }
     }
 
-    // Función que saca el flujo del WebView estricto de la APK y lo abre en el Chrome del dispositivo
     function lanzarLoginExterno() {
+      // URL de tu plataforma en GitHub Pages con su versión correspondiente
       const urlDestino = "https://mayoralap.github.io/incio_CN_PRO3/?v=68";
-      // Forzar apertura en el navegador externo del sistema Android
-      window.open(urlDestino, "_system");
-    }
-
-   function lanzarLoginExterno() {
-      mostrarAviso("Abriendo el navegador del sistema...");
       
-      const urlDestino = "https://mayoralap.github.io/incio_CN_PRO3/";
-
-      // Detectar si estamos en Android nativo para forzar la apertura en Chrome externo
       const ua = navigator.userAgent;
       if (ua.includes("ColumbaAppNative") || ua.includes("Android")) {
-        // Intent oficial de Android para forzar la apertura en el navegador Chrome del celular
+        // Forzar la apertura directa en Chrome externo usando el Intent nativo de Android
         window.location.href = "intent://" + urlDestino.replace("https://", "") + "#Intent;scheme=https;package=com.android.chrome;end";
       } else {
-        // Si por alguna razón se abre en PC o navegador normal
+        // Comportamiento normal para PC o navegador web
         window.open(urlDestino, "_blank");
       }
     }
