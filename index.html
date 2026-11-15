@@ -93,9 +93,6 @@
   </div>
 
 <script type="module">
-  // Importamos el plugin de Capacitor Browser de forma segura
-  import { Browser } from 'https://cdn.jsdelivr.net/npm/@capacitor/browser@8.0.5/+esm';
-
   const A = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
   const B = "https://script.google.com/macros/s/AKfycby4ov5QtHYZUiw3CCXqpyxD8tU3LAiBSuZeKmTDcnY_FpTX_k946XlkJgEGoJTNsdOMLg/exec";
      
@@ -157,80 +154,36 @@
     return deviceId;
   }
 
-  // Función para manejar el inicio de sesión nativo mediante el navegador del sistema
-  async function iniciarSesionNativoApp() {
+  // Función de validación y envío de credenciales con control de seguridad estricto
+  function C(r) {
     const m = document.getElementById('mensaje');
+    
+    // VALIDACIÓN CRÍTICA: Si no hay credencial, detenemos todo en seco para evitar que avance vacío
+    if (!r || !r.credential) {
+      m.style.color = "#d32f2f";
+      m.innerText = "Acceso denegado: No se detectó una credencial de Google válida.";
+      console.error("Intento de avance sin credencial bloqueado.");
+      return; 
+    }
+
     m.style.color = "var(--color-primary)";
-    m.innerText = "Preparando acceso...";
+    m.innerText = "Validando credenciales y dispositivo... redirigiendo.";
 
     const deviceId = obtenerOGenerarDeviceId();
     const huellaDigital = generarHuellaDigitalNativa();
     const devName = obtenerNombreAmigable();
     localStorage.setItem('cn_device_name', devName);
 
-    const authUrl = B + "?action=native_auth&deviceId=" + encodeURIComponent(deviceId) + "&devName=" + encodeURIComponent(devName) + "&huellaDigital=" + encodeURIComponent(huellaDigital);
+    const urlFinal = B +
+      "?token=" + encodeURIComponent(r.credential) +
+      "&deviceId=" + encodeURIComponent(deviceId) +
+      "&devName=" + encodeURIComponent(devName) +
+      "&huellaDigital=" + encodeURIComponent(huellaDigital);
 
-    // Detectamos de forma segura si estamos en Android nativo mediante el User-Agent del WebView
-    const esAndroidNativo = /android/i.test(navigator.userAgent) && (window.Capacitor || window.location.protocol === 'file:' || window.isNativeApp);
-
-    if (esAndroidNativo) {
-      // Si estamos en la app móvil, abrimos directamente la URL en el navegador externo del teléfono
-      // usando un enlace de redirección o forzando la apertura por esquema si el contenedor lo permite.
-      // O más sencillo y directo: redirigimos el WebView para que el sistema operativo intercepte el enlace web externo.
-      try {
-        window.location.href = authUrl;
-      } catch (err) {
-        m.style.color = "#d32f2f";
-        m.innerText = "No se pudo abrir el enlace de autenticación.";
-      }
-    } else {
-      // Comportamiento normal en PC
-      window.location.href = authUrl;
-    }
-  }
-
-  function C(r) {
-    const m = document.getElementById('mensaje');
-    m.style.color = "var(--color-primary)";
-    m.innerText = "Validando credenciales y dispositivo... redirigiendo.";
-
-    if (r && r.credential) {
-      const deviceId = obtenerOGenerarDeviceId();
-      const huellaDigital = generarHuellaDigitalNativa();
-      const devName = obtenerNombreAmigable();
-      localStorage.setItem('cn_device_name', devName);
-
-      const urlFinal = B +
-        "?token=" + encodeURIComponent(r.credential) +
-        "&deviceId=" + encodeURIComponent(deviceId) +
-        "&devName=" + encodeURIComponent(devName) +
-        "&huellaDigital=" + encodeURIComponent(huellaDigital);
-
-      window.location.href = urlFinal;
-    } else {
-      m.style.color = "#d32f2f";
-      m.innerText = "Error: No se recibió una credencial válida de Google.";
-    }
+    window.location.href = urlFinal;
   }
 
   function inicializarGIS() {
-    // Verificamos si estamos corriendo dentro de la app nativa de Android/iOS con Capacitor
-    const esAppNativa = window.Capacitor && window.Capacitor.isNativePlatform();
-
-    if (esAppNativa) {
-      // Si es la app nativa, ocultamos el botón de Google tradicional por popup
-      // y creamos un botón adaptado que invoque al navegador del sistema
-      const buttonDiv = document.getElementById("buttonDiv");
-      buttonDiv.innerHTML = `
-        <button id="btnNativoGoogle" style="background: #1a73e8; color: white; border: none; padding: 12px 24px; border-radius: 4px; font-size: 1rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;">
-          <i class="bi bi-google"></i> Iniciar sesión con Google
-        </button>
-      `;
-      document.getElementById("btnNativoGoogle").addEventListener("click", iniciarSesionNativoApp);
-      return;
-    }
-
-    // Comportamiento normal para PC de escritorio / navegador web estándar
     if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
       setTimeout(inicializarGIS, 100);
       return;
@@ -241,7 +194,7 @@
         client_id: A,
         callback: C,
         context: "signin",
-        ux_mode: "popup",
+        ux_mode: "popup", // Mantenemos popup estándar que ya funciona perfecto en la web
         auto_select: false
       });
 
@@ -267,7 +220,6 @@
 
   window.addEventListener("load", inicializarGIS);
 </script>
-
 
 </body>
 </html>
