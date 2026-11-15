@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Columba Notebook – Verificación de Identidad</title>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <style>
     :root {
@@ -67,6 +66,28 @@
       margin-bottom: 10px;
     }
 
+    .btn-google-pro {
+      background: #1a73e8;
+      color: white;
+      border: none;
+      padding: 14px 24px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      text-decoration: none;
+    }
+
+    .btn-google-pro:hover {
+      background: #1557b0;
+    }
+
     #mensaje {
       margin-top: 16px;
       font-weight: 500;
@@ -88,18 +109,22 @@
     <h2>Verificación de Identidad</h2>
     <p>Para verificar el estado de tu cuenta y mostrarte las opciones correspondientes, inicia sesión con Google.</p>
     
-    <div id="buttonDiv"></div>
+    <!-- BOTÓN ESTÁTICO EN EL HTML: IMPOSIBLE QUE DESAPAREZCA -->
+    <div id="buttonDiv">
+      <button id="btnGoogleCustom" class="btn-google-pro" onclick="ejecutarAccesoMovil()">
+        <i class="bi bi-google" style="font-size: 1.2rem;"></i> Iniciar sesión con Google
+      </button>
+    </div>
+    
     <div id="mensaje"></div>
   </div>
 
 <script>
-  const A = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
   const B = "https://script.google.com/macros/s/AKfycby4ov5QtHYZUiw3CCXqpyxD8tU3LAiBSuZeKmTDcnY_FpTX_k946XlkJgEGoJTNsdOMLg/exec";
      
   function generarHuellaDigitalNativa() {
     const nav = window.navigator;
     const scr = window.screen;
-
     const rawString = [
       nav.userAgent,
       nav.language,
@@ -115,7 +140,6 @@
       hash = ((hash << 5) - hash) + char;
       hash |= 0;
     }
-
     return 'FP-' + Math.abs(hash).toString(36).toUpperCase();
   }
 
@@ -146,7 +170,6 @@
     return deviceId;
   }
 
-  // Acción al hacer clic en el botón (funciona perfecto en móviles y evita bloqueos de popup)
   function ejecutarAccesoMovil() {
     const m = document.getElementById('mensaje');
     m.style.color = "var(--color-primary)";
@@ -157,7 +180,6 @@
     const devName = obtenerNombreAmigable();
     localStorage.setItem('cn_device_name', devName);
 
-    // Redirección limpia al backend pasando los datos del dispositivo
     const urlFinal = B +
       "?action=mobile_login" +
       "&deviceId=" + encodeURIComponent(deviceId) +
@@ -166,80 +188,7 @@
 
     window.location.href = urlFinal;
   }
-
-  // Callback para escritorio (si se usa Google GIS tradicional)
-  function C(r) {
-    const m = document.getElementById('mensaje');
-    if (!r || !r.credential) {
-      m.style.color = "#d32f2f";
-      m.innerText = "Error: Credencial de Google no válida.";
-      return;
-    }
-
-    m.style.color = "var(--color-primary)";
-    m.innerText = "Validando credenciales... redirigiendo.";
-
-    const deviceId = obtenerOGenerarDeviceId();
-    const huellaDigital = generarHuellaDigitalNativa();
-    const devName = obtenerNombreAmigable();
-    localStorage.setItem('cn_device_name', devName);
-
-    const urlFinal = B +
-      "?token=" + encodeURIComponent(r.credential) +
-      "&deviceId=" + encodeURIComponent(deviceId) +
-      "&devName=" + encodeURIComponent(devName) +
-      "&huellaDigital=" + encodeURIComponent(huellaDigital);
-
-    window.location.href = urlFinal;
-  }
-
-  function inicializarGIS() {
-    const buttonDiv = document.getElementById("buttonDiv");
-    if (!buttonDiv) return;
-
-    // Detectamos si es pantalla táctil/móvil o si estamos dentro de la app
-    const esMovil = window.innerWidth <= 768 || /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
-
-    if (esMovil) {
-      // PINTA UN BOTÓN HTML VISIBLE Y FUNCIONAL QUE NUNCA FALLA EN MÓVIL
-      buttonDiv.innerHTML = `
-        <button id="btnGoogleCustom" style="background: #1a73e8; color: white; border: none; padding: 14px 24px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
-          <i class="bi bi-google" style="font-size: 1.2rem;"></i> Iniciar sesión con Google
-        </button>
-      `;
-      document.getElementById("btnGoogleCustom").addEventListener("click", ejecutarAccesoMovil);
-      return;
-    }
-
-    // Si es PC de escritorio, intentamos cargar el SDK de Google GIS
-    if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
-      setTimeout(inicializarGIS, 100);
-      return;
-    }
-
-    try {
-      google.accounts.id.initialize({
-        client_id: A,
-        callback: C,
-        context: "signin",
-        ux_mode: "popup",
-        auto_select: false
-      });
-
-      google.accounts.id.renderButton(buttonDiv, {
-        theme: "outline",
-        size: "large",
-        text: "signin_with",
-        shape: "rectangular",
-        width: "290"
-      });
-    } catch (err) {
-      console.error("Error al inicializar Google Identity en escritorio:", err);
-    }
-  }
-
-  window.addEventListener("load", inicializarGIS);
 </script>
-  
+
 </body>
 </html>
