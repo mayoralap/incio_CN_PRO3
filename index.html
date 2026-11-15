@@ -212,30 +212,47 @@
     }
 
     function inicializarGIS() {
-      if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
+    // 1. Detectar si estamos dentro del contenedor nativo de Capacitor/Android
+    const isNativeApp = window.Capacitor && window.Capacitor.isNativePlatform();
+
+    if (isNativeApp) {
+        // En la app nativa, ocultamos o transformamos el botón GIS para evitar el bloqueo del WebView
+        const buttonDiv = document.getElementById("buttonDiv");
+        if (buttonDiv) {
+            buttonDiv.innerHTML = `
+                <button onclick="window.open('https://mayoralap.github.io/incio_CN_PRO3/', '_system')" 
+                        style="width: 290px; height: 40px; background: #ffffff; color: #444; border: 1px solid #ccc; border-radius: 4px; font-weight: 500; cursor: pointer;">
+                    Iniciar sesión con Google (Navegador)
+                </button>`;
+        }
+        return;
+    }
+
+    // 2. Comportamiento normal para la web / GitHub Pages abierto en navegador web estándar
+    if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
         setTimeout(inicializarGIS, 100);
         return;
-      }
+    }
 
-      try {
+    try {
         google.accounts.id.initialize({
-          client_id: A,
-          callback: C,
-          context: "signin",
-          ux_mode: "popup",
-          auto_select: false,
-          use_fedcm_for_prompt: false
+            client_id: A,
+            callback: C,
+            context: "signin",
+            ux_mode: "popup",
+            auto_select: false,
+            use_fedcm_for_prompt: false
         });
 
         google.accounts.id.renderButton(
-          document.getElementById("buttonDiv"),
-          { theme: "outline", size: "large", text: "signin_with", shape: "rectangular", width: "290" }
+            document.getElementById("buttonDiv"),
+            { theme: "outline", size: "large", text: "signin_with", shape: "rectangular", width: "290" }
         );
 
-      } catch (err) {
+    } catch (err) {
         console.error("Error al inicializar Google Identity:", err);
-      }
     }
+}
 
     window.addEventListener('load', inicializarGIS);
 </script>
