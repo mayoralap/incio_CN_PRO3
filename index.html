@@ -294,7 +294,7 @@
   }
 
   // Función exclusiva para el login nativo dentro de la APK móvil
-  window.ejecutarLoginMovilNativo = async function() {
+ window.ejecutarLoginMovilNativo = async function() {
     try {
       mostrarAviso("Abriendo selector de cuenta en el dispositivo...");
       const res = await SocialLogin.login({
@@ -316,11 +316,13 @@
 
         window.location.href = urlFinal;
       } else {
-        throw new Error("No se obtuvo el token del dispositivo.");
+        throw new Error("Respuesta incompleta del plugin nativo.");
       }
     } catch (err) {
-      console.error("Error en login móvil:", err);
-      mostrarAviso("No se pudo completar el acceso en el móvil.", true);
+      // AQUÍ IMPRIMIMOS EL ERROR REAL EN PANTALLA PARA SABER QUÉ FALLÓ
+      console.error("Error detallado en login móvil:", err);
+      mostrarAviso("Error APK: " + (err.message || JSON.stringify(err)), true);
+      alert("Detalle del error nativo: " + JSON.stringify(err));
     }
   };
 
