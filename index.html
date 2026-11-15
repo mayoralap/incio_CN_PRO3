@@ -73,6 +73,20 @@
       font-size: 0.95rem;
     }
 
+    .btn-fallback {
+      width: 100%;
+      max-width: 290px;
+      height: 42px;
+      background: #1a73e8;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.95rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
     @media (max-width: 480px) {
       .main-card {
         padding: 24px 20px;
@@ -93,12 +107,9 @@
   </div>
 
 <script>
-   const A = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
+    const A = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
     const B = "https://script.google.com/macros/s/AKfycby4ov5QtHYZUiw3CCXqpyxD8tU3LAiBSuZeKmTDcnY_FpTX_k946XlkJgEGoJTNsdOMLg/exec";
 
-    /**
-     * 1.1 Generador de huella digital nativa (Vive y muere en el Frontend de GitHub)
-     */
     function generarHuellaDigitalNativa() {
       const nav = window.navigator;
       const scr = window.screen;
@@ -120,9 +131,6 @@
       return 'FP-' + Math.abs(hash).toString(36).toUpperCase();
     }
 
-    /**
-     * Devuelve un nombre amigable del dispositivo y navegador según el User-Agent.
-     */
     function obtenerNombreAmigable() {
       const ua = navigator.userAgent;
       const uaLower = ua.toLowerCase();
@@ -165,9 +173,6 @@
       return `Navegador Web (${navegador})`;
     }
 
-    /**
-     * Obtiene o genera una huella única (deviceId) persistente.
-     */
     function obtenerOGenerarDeviceId() {
       let deviceId = (typeof window.SERVER_DEVICE_ID !== 'undefined' && window.SERVER_DEVICE_ID) ? window.SERVER_DEVICE_ID : null;
 
@@ -189,70 +194,77 @@
       m.innerText = "Validando credenciales y dispositivo... redirigiendo.";
       
       if (r && r.credential) {
-        // 1. Recuperar el deviceId y la huella nativa en el cliente de GitHub
         const deviceId = obtenerOGenerarDeviceId();
         const huellaDigital = generarHuellaDigitalNativa();
-        
-        // 2. Calcular el nombre amigable y GUARDARLO en localStorage
         const devName = obtenerNombreAmigable();
         localStorage.setItem('cn_device_name', devName);
 
-        // 3. Construir la URL completa con todos los parámetros listos para el backend
         const urlFinal = B + "?token=" + encodeURIComponent(r.credential) + 
-                             "&deviceId=" + encodeURIComponent(deviceId) + 
-                             "&devName=" + encodeURIComponent(devName) +
-                             "&huellaDigital=" + encodeURIComponent(huellaDigital);
+                           "&deviceId=" + encodeURIComponent(deviceId) + 
+                           "&devName=" + encodeURIComponent(devName) +
+                           "&huellaDigital=" + encodeURIComponent(huellaDigital);
 
-        // Transmitir al Web App de Apps Script en un solo viaje limpio
         window.location.href = urlFinal;
       } else {
         m.style.color = "#d32f2f";
         m.innerText = "Error: No se recibió una credencial válida de Google.";
+        alert("Error de credencial GIS: " + JSON.stringify(r));
       }
     }
 
     function inicializarGIS() {
-    // 1. Detectar si estamos dentro del contenedor nativo de Capacitor/Android
-    const isNativeApp = window.Capacitor && window.Capacitor.isNativePlatform();
+      try {
+        // Diagnóstico en pantalla y alerta para saber en qué entorno estamos corriendo
+        const isNativeApp = window.Capacitor && window.Capacitor.isNativePlatform();
+        console.log("Entorno nativo detectado:", isNativeApp);
 
-    if (isNativeApp) {
-        // En la app nativa, ocultamos o transformamos el botón GIS para evitar el bloqueo del WebView
-        const buttonDiv = document.getElementById("buttonDiv");
-        if (buttonDiv) {
+        if (isNativeApp) {
+          // Si estamos en la APK, inyectamos un botón alternativo directo para evitar el bloqueo del popup
+          const buttonDiv = document.getElementById("buttonDiv");
+          if (buttonDiv) {
             buttonDiv.innerHTML = `
-                <button onclick="window.open('https://mayoralap.github.io/incio_CN_PRO3/', '_system')" 
-                        style="width: 290px; height: 40px; background: #ffffff; color: #444; border: 1px solid #ccc; border-radius: 4px; font-weight: 500; cursor: pointer;">
-                    Iniciar sesión con Google (Navegador)
-                </button>`;
+              <button class="btn-fallback" onclick="lanzarLoginExterno()">
+                Continuar con Google (Navegador)
+              </button>`;
+          }
+          const m = document.getElementById('mensaje');
+          m.style.color = "#5f6368";
+          m.innerText = "Modo App Nativo: Usa el botón superior para autenticarte.";
+          return;
         }
-        return;
-    }
 
-    // 2. Comportamiento normal para la web / GitHub Pages abierto en navegador web estándar
-    if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
-        setTimeout(inicializarGIS, 100);
-        return;
-    }
+        // Entorno Web Estándar (GitHub Pages en PC/Navegador móvil)
+        if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
+          setTimeout(inicializarGIS, 100);
+          return;
+        }
 
-    try {
         google.accounts.id.initialize({
-            client_id: A,
-            callback: C,
-            context: "signin",
-            ux_mode: "popup",
-            auto_select: false,
-            use_fedcm_for_prompt: false
+          client_id: A,
+          callback: C,
+          context: "signin",
+          ux_mode: "popup",
+          auto_select: false,
+          use_fedcm_for_prompt: false
         });
 
         google.accounts.id.renderButton(
-            document.getElementById("buttonDiv"),
-            { theme: "outline", size: "large", text: "signin_with", shape: "rectangular", width: "290" }
+          document.getElementById("buttonDiv"),
+          { theme: "outline", size: "large", text: "signin_with", shape: "rectangular", width: "290" }
         );
 
-    } catch (err) {
+      } catch (err) {
         console.error("Error al inicializar Google Identity:", err);
+        alert("Excepción capturada en inicializarGIS: " + err.message);
+      }
     }
-}
+
+    // Función auxiliar para abrir el flujo fuera del WebView si estamos en la APK
+    function lanzarLoginExterno() {
+      alert("Abriendo navegador externo para autenticación segura...");
+      // Forzar la apertura del mismo sitio o pasarela de auth en el navegador nativo del sistema
+      window.open("https://mayoralap.github.io/incio_CN_PRO3/", "_system");
+    }
 
     window.addEventListener('load', inicializarGIS);
 </script>
