@@ -230,20 +230,15 @@
 
     const esNativo = Capacitor.isNativePlatform();
 
-    mostrarAviso(
-  JSON.stringify(
-    Object.keys(window.Capacitor?.Plugins || {})
-  )
-);
-return;
+        mostrarAviso(
+      JSON.stringify(
+        Object.keys(window.Capacitor?.Plugins || {})
+      )
+    );
+    return;
 
 
     if (esNativo) {
-
-      mostrarAviso(
-        "PLUGIN EN CAPACITOR: " +
-        (window.Capacitor?.Plugins?.SocialLogin ? "SI" : "NO")
-      );
 
       try {
 
@@ -253,7 +248,6 @@ return;
           }
         });
 
-        mostrarAviso("INIT OK");
 
       } catch (e) {
 
