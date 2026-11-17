@@ -240,7 +240,7 @@
         
         // Inicializamos el plugin nativo en la APK
         try {
-          await window.Capacitor.Plugins.SocialLogin.initialize({google: { clientId: A }});
+          await window.Capacitor.Plugins.SocialLogin.initialize({google: { webClientId: A }});
   
         } catch (e) {
           mostrarAviso("ERROR INIT: " + (e?.message || JSON.stringify(e)), true);
