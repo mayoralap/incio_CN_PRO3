@@ -242,6 +242,9 @@
         // Inicializamos el plugin nativo en la APK
         try {
           await SocialLogin.initialize({ google: { clientId: A } });
+
+          mostrarAviso("INIT OK");
+
         catch (e) { mostrarAviso("ERROR INIT: " + (e?.message || JSON.stringify(e)), true );
           return;
 
