@@ -110,7 +110,6 @@
 <script type="module">
   // Importamos el detector de entorno de Capacitor
   import { Capacitor } from 'https://cdn.jsdelivr.net/npm/@capacitor/core@8.6.0/+esm';
- 
   const A = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
   const B = "https://script.google.com/macros/s/AKfycby4ov5QtHYZUiw3CCXqpyxD8tU3LAiBSuZeKmTDcnY_FpTX_k946XlkJgEGoJTNsdOMLg/exec";
 
@@ -223,119 +222,79 @@
     }
   };
 
-async function inicializarGIS() {
-  try {
+  async function inicializarGIS() {
+    try {
+      mostrarAviso("Analizando entorno de ejecución...");
 
-    mostrarAviso("Analizando entorno de ejecución...");
+      // VERIFICACIÓN INTELIGENTE DE ENTORNO
+      const esNativo = Capacitor.isNativePlatform();
 
-    const esNativo = Capacitor.isNativePlatform();
+      mostrarAviso("RESULTADO DETECCIÓN: " + esNativo);
 
-    mostrarAviso(
-      "RESULTADO DETECCIÓN: " + esNativo
-    );
+      if (esNativo) {
+        mostrarAviso("Modo App Nativa detectado: Activando plugin de autenticación móvil.");
+        
+        // Inicializamos el plugin nativo en la APK
+        try {
+          await window.Capacitor.Plugins.SocialLogin.initialize({google: { clientId: A }});
+  
+        } catch (e) {
+          mostrarAviso("ERROR INIT: " + (e?.message || JSON.stringify(e)), true);
+          return;
+        }
 
-    if (esNativo) {
-
-      mostrarAviso(
-        "Modo App Nativa detectado: Activando plugin de autenticación móvil."
-      );
-
-      try {
-
-        await window.Capacitor.Plugins.SocialLogin.initialize({
-          google: {
-            clientId: A
-          }
-        });
-
-        mostrarAviso("INIT OK");
-
-      } catch (e) {
-
-        mostrarAviso(
-          "ERROR INIT: " +
-          (e?.message || JSON.stringify(e)),
-          true
-        );
-
+        // Renderizamos un botón nativo que llama al manejador del teléfono
+        const buttonDiv = document.getElementById("buttonDiv");
+        if (buttonDiv) {
+          buttonDiv.innerHTML = `
+            <button onclick="ejecutarLoginMovilNativo()" style="width: 290px; height: 42px; background: #1a73e8; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              Iniciar sesión con Google (Nativo)
+            </button>`;
+        }
         return;
       }
 
-      const buttonDiv = document.getElementById("buttonDiv");
+      // --- ENTORNO WEB NORMAL (PC / GitHub Pages) ---
+      // Si entra desde la computadora, ejecuta exactamente tu mismo código de siempre
+      const ua = navigator.userAgent;
+      const isNativeAppUserAgent = ua.includes("ColumbaAppNative");
 
-      if (buttonDiv) {
-
-        buttonDiv.innerHTML = `
-          <button
-            onclick="ejecutarLoginMovilNativo()"
-            style="
-              width:290px;
-              height:42px;
-              background:#1a73e8;
-              color:white;
-              border:none;
-              border-radius:4px;
-              font-weight:600;
-              cursor:pointer;
-              box-shadow:0 2px 4px rgba(0,0,0,0.1);
-            ">
-            Iniciar sesión con Google (Nativo)
-          </button>
-        `;
-
+      if (isNativeAppUserAgent) {
+        const buttonDiv = document.getElementById("buttonDiv");
+        if (buttonDiv) {
+          buttonDiv.innerHTML = `
+            <button onclick="lanzarLoginExterno()" style="width: 290px; height: 42px; background: #1a73e8; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              Iniciar sesión con Google (Navegador)
+            </button>`;
+        }
+        return;
       }
 
-      return;
-    }
-
-    // ENTORNO WEB NORMAL
-
-    const ua = navigator.userAgent;
-    const isNativeAppUserAgent =
-      ua.includes("ColumbaAppNative");
-
-    if (isNativeAppUserAgent) {
-
-      const buttonDiv =
-        document.getElementById("buttonDiv");
-
-      if (buttonDiv) {
-
-        buttonDiv.innerHTML = `
-          <button
-            onclick="lanzarLoginExterno()"
-            style="
-              width:290px;
-              height:42px;
-              background:#1a73e8;
-              color:white;
-              border:none;
-              border-radius:4px;
-              font-weight:600;
-              cursor:pointer;
-              box-shadow:0 2px 4px rgba(0,0,0,0.1);
-            ">
-            Iniciar sesión con Google (Navegador)
-          </button>
-        `;
-
+      if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
+        setTimeout(inicializarGIS, 200);
+        return;
       }
 
-      return;
+      google.accounts.id.initialize({
+        client_id: A,
+        callback: window.C,
+        context: "signin",
+        ux_mode: "popup",
+        auto_select: false,
+        use_fedcm_for_prompt: false
+      });
+
+      google.accounts.id.renderButton(
+        document.getElementById("buttonDiv"),
+        { theme: "outline", size: "large", text: "signin_with", shape: "rectangular", width: "290" }
+      );
+
+    } catch (err) {
+      console.error("Error al inicializar:", err);
+      mostrarAviso("Excepción: " + err.message, true);
     }
+  }
 
-    if (
-      typeof google === "undefined" ||
-      !google.accounts ||
-      !google.accounts.id
-    ) {
-
-      setTimeout(inicializarGIS, 200);
-      return;
-    }
-
-    google.accounts.id.initialize({
-   
   // Función exclusiva para el login nativo dentro de la APK móvil
   window.ejecutarLoginMovilNativo = async function() {
     try {
