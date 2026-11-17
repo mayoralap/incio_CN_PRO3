@@ -298,6 +298,7 @@
       mostrarAviso("Excepción: " + err.message, true);
     }
   }
+}
 
  // Función exclusiva para el login nativo dentro de la APK móvil
 window.ejecutarLoginMovilNativo = async function() {
@@ -351,9 +352,21 @@ window.ejecutarLoginMovilNativo = async function() {
 
   } catch (err) {
 
-    console.error("Error en login móvil:", err  );
-      
-    mostrarAviso("ERROR: " + (err?.message || JSON.stringify(err) || "Error desconocido"), true);}
+    console.error(
+      "Error en login móvil:",
+      err
+    );
+
+    mostrarAviso(
+      "ERROR: " +
+      (err?.message ||
+       JSON.stringify(err) ||
+       "Error desconocido"),
+      true
+    );
+
+  }
+
 };
 
   window.lanzarLoginExterno = function() {
