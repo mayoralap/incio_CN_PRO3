@@ -242,8 +242,9 @@
         // Inicializamos el plugin nativo en la APK
         try {
           await SocialLogin.initialize({ google: { clientId: A } });
-        } catch (e) {
-          console.warn("Error inicializando SocialLogin:", e);
+        catch (e) { mostrarAviso("ERROR INIT: " + (e?.message || JSON.stringify(e)), true );
+          return;
+
         }
 
         // Renderizamos un botón nativo que llama al manejador del teléfono
@@ -350,21 +351,9 @@ window.ejecutarLoginMovilNativo = async function() {
 
   } catch (err) {
 
-    console.error(
-      "Error en login móvil:",
-      err
-    );
-
-    mostrarAviso(
-      "ERROR: " +
-      (err?.message ||
-       JSON.stringify(err) ||
-       "Error desconocido"),
-      true
-    );
-
-  }
-
+    console.error("Error en login móvil:", err  );
+      
+    mostrarAviso("ERROR: " + (err?.message || JSON.stringify(err) || "Error desconocido"), true);}
 };
 
   window.lanzarLoginExterno = function() {
