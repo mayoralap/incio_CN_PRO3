@@ -231,11 +231,14 @@
       // VERIFICACIÓN INTELIGENTE DE ENTORNO
       const esNativo = Capacitor.isNativePlatform();
 
-      mostrarAviso("PLUGIN EN CAPACITOR: " + (window.Capacitor?.Plugins?.SocialLogin ? "SI" : "NO"));
+      mostrarAviso(
+        "PLUGIN EN CAPACITOR: " +
+        (window.Capacitor?.Plugins?.SocialLogin ? "SI" : "NO")
+      );
 
-      mostrarAviso("RESULTADO DETECCIÓN: " + esNativo);
+      return;
 
-      if (esNativo) {
+if (esNativo) {
         mostrarAviso("Modo App Nativa detectado: Activando plugin de autenticación móvil.");
         
         // Inicializamos el plugin nativo en la APK
