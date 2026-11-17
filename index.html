@@ -228,13 +228,25 @@
 
   async function inicializarGIS() {
     try {
-      // EVALUACIÓN DE ENTORNO PARA DIAGNÓSTICO
-      const esNativo = Capacitor.isNativePlatform();
-      const tipoEntorno = esNativo ? "Entorno de ejecución: Móvil (App Nativa)" : "Entorno de ejecución: Navegador Web (PC/Sitio)";
+      // EVALUACIÓN DE ENTORNO USANDO LA VARIABLE FIJA DE CONTROL
+      let esNativo = Capacitor.isNativePlatform();
       
+      if (FORZAR_ENTORNO === "MOBILE") {
+        esNativo = true;
+      } else if (FORZAR_ENTORNO === "WEB") {
+        esNativo = false;
+      }
+
+      const tipoEntorno = esNativo ? "Entorno de ejecución: Móvil (App Nativa)" : "Entorno de ejecución: Navegador Web (PC/Sitio)";
       mostrarAviso(tipoEntorno);
         
       if (esNativo) {
+        // BLINDAJE: Verificamos que los plugins de Capacitor y SocialLogin existan antes de usarlos
+        if (!window.Capacitor || !window.Capacitor.Plugins || !window.Capacitor.Plugins.SocialLogin) {
+          mostrarAviso("ERROR: El plugin SocialLogin no está disponible en este WebView nativo.", true);
+          return;
+        }
+
         // Inicializamos el plugin nativo en la APK usando estrictamente el cliente nativo
         try {
           await window.Capacitor.Plugins.SocialLogin.initialize({google: { webClientId: CLIENT_ID_NATIVO }});
