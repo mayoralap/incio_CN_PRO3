@@ -228,10 +228,11 @@
 
   async function inicializarGIS() {
     try {
-      mostrarAviso("Analizando entorno de ejecución...");
-
-      // VERIFICACIÓN INTELIGENTE DE ENTORNO
+      // EVALUACIÓN DE ENTORNO PARA DIAGNÓSTICO
       const esNativo = Capacitor.isNativePlatform();
+      const tipoEntorno = esNativo ? "Entorno de ejecución: Móvil (App Nativa)" : "Entorno de ejecución: Navegador Web (PC/Sitio)";
+      
+      mostrarAviso(tipoEntorno);
         
       if (esNativo) {
         // Inicializamos el plugin nativo en la APK usando estrictamente el cliente nativo
