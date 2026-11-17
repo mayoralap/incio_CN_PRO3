@@ -300,36 +300,74 @@
     }
   }
 
-  // Función exclusiva para el login nativo dentro de la APK móvil
-  window.ejecutarLoginMovilNativo = async function() {
-    try {
-      mostrarAviso("Abriendo selector de cuenta en el dispositivo...");
-      const res = await SocialLogin.login({
-        provider: 'google',
-        options: { scopes: ['profile', 'email'] }
-      });
+ // Función exclusiva para el login nativo dentro de la APK móvil
+window.ejecutarLoginMovilNativo = async function() {
 
-      if (res && res.result && res.result.authentication && res.result.authentication.idToken) {
-        const token = res.result.authentication.idToken;
-        const deviceId = obtenerOGenerarDeviceId();
-        const huellaDigital = generarHuellaDigitalNativa();
-        const devName = obtenerNombreAmigable();
-        localStorage.setItem('cn_device_name', devName);
+  try {
 
-        const urlFinal = B + "?token=" + encodeURIComponent(token) + 
-                           "&deviceId=" + encodeURIComponent(deviceId) + 
-                           "&devName=" + encodeURIComponent(devName) +
-                           "&huellaDigital=" + encodeURIComponent(huellaDigital);
+    mostrarAviso(
+      "Abriendo selector de cuenta en el dispositivo..."
+    );
 
-        window.location.href = urlFinal;
-      } else {
-        throw new Error("No se obtuvo el token del dispositivo.");
+    const res = await SocialLogin.login({
+      provider: 'google',
+      options: {
+        scopes: ['profile', 'email']
       }
-    } catch (err) {
-      console.error("Error en login móvil:", err);
-      mostrarAviso("No se pudo completar el acceso en el móvil.", true);
-    }
-  };
+    });
+
+    mostrarAviso(
+      "Respuesta recibida del plugin."
+    );
+
+    if (
+      res &&
+      res.result &&
+      res.result.authentication &&
+      res.result.authentication.idToken
+    ) {
+
+      const token =
+        res.result.authentication.idToken;
+
+      const deviceId = obtenerOGenerarDeviceId();
+
+      const huellaDigital = generarHuellaDigitalNativa();
+
+      const devName = obtenerNombreAmigable();
+
+      localStorage.setItem('cn_device_name',devName);
+
+      const urlFinal =
+        B + "?token=" +encodeURIComponent(token) +
+        "&deviceId=" + encodeURIComponent(deviceId) +
+        "&devName=" + encodeURIComponent(devName) +
+        "&huellaDigital=" + encodeURIComponent(huellaDigital);
+
+      mostrarAviso("Token obtenido correctamente.");
+
+      window.location.href = urlFinal;
+
+    } else {throw new Error("No se obtuvo el token del dispositivo."); }
+
+  } catch (err) {
+
+    console.error(
+      "Error en login móvil:",
+      err
+    );
+
+    mostrarAviso(
+      "ERROR: " +
+      (err?.message ||
+       JSON.stringify(err) ||
+       "Error desconocido"),
+      true
+    );
+
+  }
+
+};
 
   window.lanzarLoginExterno = function() {
     const urlDestino = "https://mayoralap.github.io/incio_CN_PRO3/";
