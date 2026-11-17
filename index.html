@@ -223,19 +223,33 @@
     }
   };
 
- async function inicializarGIS() {
+async function inicializarGIS() {
   try {
 
     mostrarAviso("Analizando entorno de ejecución...");
 
     const esNativo = Capacitor.isNativePlatform();
 
-       
+    mostrarAviso(
+      "RESULTADO DETECCIÓN: " + esNativo
+    );
+
     if (esNativo) {
+
+      mostrarAviso(
+        "Modo App Nativa detectado: Activando plugin de autenticación móvil."
+      );
 
       try {
 
-        
+        await window.Capacitor.Plugins.SocialLogin.initialize({
+          google: {
+            clientId: A
+          }
+        });
+
+        mostrarAviso("INIT OK");
+
       } catch (e) {
 
         mostrarAviso(
@@ -247,15 +261,24 @@
         return;
       }
 
-      const buttonDiv =
-        document.getElementById("buttonDiv");
+      const buttonDiv = document.getElementById("buttonDiv");
 
       if (buttonDiv) {
 
         buttonDiv.innerHTML = `
           <button
             onclick="ejecutarLoginMovilNativo()"
-            style="width:290px;height:42px;background:#1a73e8;color:white;border:none;border-radius:4px;font-weight:600;cursor:pointer;">
+            style="
+              width:290px;
+              height:42px;
+              background:#1a73e8;
+              color:white;
+              border:none;
+              border-radius:4px;
+              font-weight:600;
+              cursor:pointer;
+              box-shadow:0 2px 4px rgba(0,0,0,0.1);
+            ">
             Iniciar sesión con Google (Nativo)
           </button>
         `;
@@ -265,7 +288,7 @@
       return;
     }
 
-    // Flujo web normal
+    // ENTORNO WEB NORMAL
 
     const ua = navigator.userAgent;
     const isNativeAppUserAgent =
@@ -279,7 +302,19 @@
       if (buttonDiv) {
 
         buttonDiv.innerHTML = `
-          <button onclick="lanzarLoginExterno()">
+          <button
+            onclick="lanzarLoginExterno()"
+            style="
+              width:290px;
+              height:42px;
+              background:#1a73e8;
+              color:white;
+              border:none;
+              border-radius:4px;
+              font-weight:600;
+              cursor:pointer;
+              box-shadow:0 2px 4px rgba(0,0,0,0.1);
+            ">
             Iniciar sesión con Google (Navegador)
           </button>
         `;
@@ -290,7 +325,7 @@
     }
 
     if (
-      typeof google === 'undefined' ||
+      typeof google === "undefined" ||
       !google.accounts ||
       !google.accounts.id
     ) {
@@ -300,36 +335,7 @@
     }
 
     google.accounts.id.initialize({
-      client_id: A,
-      callback: window.C,
-      context: "signin",
-      ux_mode: "popup",
-      auto_select: false,
-      use_fedcm_for_prompt: false
-    });
-
-    google.accounts.id.renderButton(
-      document.getElementById("buttonDiv"),
-      {
-        theme: "outline",
-        size: "large",
-        text: "signin_with",
-        shape: "rectangular",
-        width: "290"
-      }
-    );
-
-  } catch (err) {
-
-    console.error(err);
-
-    mostrarAviso(
-      "Excepción: " + err.message,
-      true
-    );
-
-  }
-}
+   
   // Función exclusiva para el login nativo dentro de la APK móvil
   window.ejecutarLoginMovilNativo = async function() {
     try {
