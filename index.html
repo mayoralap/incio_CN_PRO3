@@ -231,6 +231,8 @@
       // VERIFICACIÓN INTELIGENTE DE ENTORNO
       const esNativo = Capacitor.isNativePlatform();
 
+      mostrarAviso("PLUGIN EN CAPACITOR: " + (window.Capacitor?.Plugins?.SocialLogin ? "SI" : "NO"));
+
       mostrarAviso("RESULTADO DETECCIÓN: " + esNativo);
 
       if (esNativo) {
