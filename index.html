@@ -236,9 +236,7 @@
         (window.Capacitor?.Plugins?.SocialLogin ? "SI" : "NO")
       );
 
-      return;
-
-if (esNativo) {
+  if (esNativo) {
         mostrarAviso("Modo App Nativa detectado: Activando plugin de autenticación móvil.");
         
         // Inicializamos el plugin nativo en la APK
