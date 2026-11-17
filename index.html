@@ -242,11 +242,12 @@
 
       try {
 
-        await window.Capacitor.Plugins.SocialLogin.initialize({
-          google: {
-            clientId: A
-          }
-        });
+        mostrarAviso(
+  JSON.stringify(
+    Object.keys(window.Capacitor.Plugins.SocialLogin || {})
+  )
+);
+return;
 
 
       } catch (e) {
