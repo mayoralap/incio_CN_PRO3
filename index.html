@@ -231,14 +231,29 @@
 
   async function inicializarGIS() {
     try {
-      // EVALUACIÓN DE ENTORNO PURAMENTE NATIVA Y AUTOMÁTICA
       const esNativo = Capacitor.isNativePlatform();
       
-      const tipoEntorno = esNativo ? "Entorno de ejecución: Móvil (App Nativa)" : "Entorno de ejecución: Navegador Web (PC/Sitio)";
+      const tipoEntorno = esNativo ? "Móvil (App Nativa)" : "Navegador Web (PC/Sitio)";
       mostrarAviso(tipoEntorno);
         
       if (esNativo) {
-        // Inicializamos el plugin nativo en la APK usando estrictamente el cliente nativo
+        // BLINDAJE ESTRICTO: Comprobamos que el plugin exista antes de invocarlo
+        if (
+          !window.Capacitor || 
+          !window.Capacitor.Plugins || 
+          !window.Capacitor.Plugins.SocialLogin || 
+          typeof window.Capacitor.Plugins.SocialLogin.initialize !== 'function'
+        ) {
+          mostrarAviso("El inicio nativo requiere actualización. Usando acceso web seguro...", true);
+          
+          // Opcional: Redirigir limpiamente al flujo web si el plugin nativo no está expuesto en el WebView
+          setTimeout(() => {
+            window.location.href = "https://www.pro.columbanotebook.com/Inicio";
+          }, 1500);
+          return;
+        }
+
+        // Inicializamos el plugin nativo de forma segura
         try {
           await window.Capacitor.Plugins.SocialLogin.initialize({google: { webClientId: CLIENT_ID_NATIVO }});
         } catch (e) {
