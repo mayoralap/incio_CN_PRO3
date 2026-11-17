@@ -214,7 +214,7 @@
 
       const urlFinal = B + "?token=" + encodeURIComponent(r.credential) + 
                          "&deviceId=" + encodeURIComponent(deviceId) + 
-                         "&devName=" + encodeURIComponent(devName) +
+                         "&devName=" + encodeURIComponent(devName) + 
                          "&huellaDigital=" + encodeURIComponent(huellaDigital);
 
       window.location.href = urlFinal;
@@ -231,23 +231,18 @@
       // VERIFICACIÓN INTELIGENTE DE ENTORNO
       const esNativo = Capacitor.isNativePlatform();
 
-        mostrarAviso(
-          "RESULTADO DETECCIÓN: " +
-          esNativo
-        );
-      
+      mostrarAviso("RESULTADO DETECCIÓN: " + esNativo);
+
       if (esNativo) {
         mostrarAviso("Modo App Nativa detectado: Activando plugin de autenticación móvil.");
         
         // Inicializamos el plugin nativo en la APK
         try {
           await SocialLogin.initialize({ google: { clientId: A } });
-
           mostrarAviso("INIT OK");
-            {
-        catch (e) { mostrarAviso("ERROR INIT: " + (e?.message || JSON.stringify(e)), true );
+        } catch (e) {
+          mostrarAviso("ERROR INIT: " + (e?.message || JSON.stringify(e)), true);
           return;
-
         }
 
         // Renderizamos un botón nativo que llama al manejador del teléfono
@@ -301,76 +296,56 @@
       mostrarAviso("Excepción: " + err.message, true);
     }
   }
-}
 
- // Función exclusiva para el login nativo dentro de la APK móvil
-window.ejecutarLoginMovilNativo = async function() {
+  // Función exclusiva para el login nativo dentro de la APK móvil
+  window.ejecutarLoginMovilNativo = async function() {
+    try {
+      mostrarAviso("Abriendo selector de cuenta en el dispositivo...");
 
-  try {
+      const res = await SocialLogin.login({
+        provider: 'google',
+        options: {
+          scopes: ['profile', 'email']
+        }
+      });
 
-    mostrarAviso(
-      "Abriendo selector de cuenta en el dispositivo..."
-    );
+      mostrarAviso("Respuesta recibida del plugin.");
 
-    const res = await SocialLogin.login({
-      provider: 'google',
-      options: {
-        scopes: ['profile', 'email']
+      if (
+        res &&
+        res.result &&
+        res.result.authentication &&
+        res.result.authentication.idToken
+      ) {
+        const token = res.result.authentication.idToken;
+        const deviceId = obtenerOGenerarDeviceId();
+        const huellaDigital = generarHuellaDigitalNativa();
+        const devName = obtenerNombreAmigable();
+
+        localStorage.setItem('cn_device_name', devName);
+
+        const urlFinal =
+          B + "?token=" + encodeURIComponent(token) +
+          "&deviceId=" + encodeURIComponent(deviceId) +
+          "&devName=" + encodeURIComponent(devName) +
+          "&huellaDigital=" + encodeURIComponent(huellaDigital);
+
+        mostrarAviso("Token obtenido correctamente.");
+        window.location.href = urlFinal;
+      } else {
+        throw new Error("No se obtuvo el token del dispositivo.");
       }
-    });
-
-    mostrarAviso(
-      "Respuesta recibida del plugin."
-    );
-
-    if (
-      res &&
-      res.result &&
-      res.result.authentication &&
-      res.result.authentication.idToken
-    ) {
-
-      const token =
-        res.result.authentication.idToken;
-
-      const deviceId = obtenerOGenerarDeviceId();
-
-      const huellaDigital = generarHuellaDigitalNativa();
-
-      const devName = obtenerNombreAmigable();
-
-      localStorage.setItem('cn_device_name',devName);
-
-      const urlFinal =
-        B + "?token=" +encodeURIComponent(token) +
-        "&deviceId=" + encodeURIComponent(deviceId) +
-        "&devName=" + encodeURIComponent(devName) +
-        "&huellaDigital=" + encodeURIComponent(huellaDigital);
-
-      mostrarAviso("Token obtenido correctamente.");
-
-      window.location.href = urlFinal;
-
-    } else {throw new Error("No se obtuvo el token del dispositivo."); }
-
-  } catch (err) {
-
-    console.error(
-      "Error en login móvil:",
-      err
-    );
-
-    mostrarAviso(
-      "ERROR: " +
-      (err?.message ||
-       JSON.stringify(err) ||
-       "Error desconocido"),
-      true
-    );
-
-  }
-
-};
+    } catch (err) {
+      console.error("Error en login móvil:", err);
+      mostrarAviso(
+        "ERROR: " +
+        (err?.message ||
+         JSON.stringify(err) ||
+         "Error desconocido"),
+        true
+      );
+    }
+  };
 
   window.lanzarLoginExterno = function() {
     const urlDestino = "https://mayoralap.github.io/incio_CN_PRO3/";
