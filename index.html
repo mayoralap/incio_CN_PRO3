@@ -243,7 +243,7 @@ if (esNativo) {
         
         // Inicializamos el plugin nativo en la APK
         try {
-          await SocialLogin.initialize({ google: { clientId: A } });
+          await window.Capacitor.Plugins.SocialLogin.initialize({ google: { clientId: A}});
           mostrarAviso("INIT OK");
         } catch (e) {
           mostrarAviso("ERROR INIT: " + (e?.message || JSON.stringify(e)), true);
@@ -307,7 +307,8 @@ if (esNativo) {
     try {
       mostrarAviso("Abriendo selector de cuenta en el dispositivo...");
 
-      const res = await SocialLogin.login({
+      const res =
+      await window.Capacitor.Plugins.SocialLogin.login({
         provider: 'google',
         options: {
           scopes: ['profile', 'email']
