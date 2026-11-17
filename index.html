@@ -230,6 +230,14 @@
 
     const esNativo = Capacitor.isNativePlatform();
 
+    mostrarAviso(
+  JSON.stringify(
+    Object.keys(window.Capacitor?.Plugins || {})
+  )
+);
+return;
+
+
     if (esNativo) {
 
       mostrarAviso(
