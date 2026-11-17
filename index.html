@@ -110,7 +110,11 @@
 <script type="module">
   // Importamos el detector de entorno de Capacitor
   import { Capacitor } from 'https://cdn.jsdelivr.net/npm/@capacitor/core@8.6.0/+esm';
-  const A = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
+  
+  // CLIENTES SEPARADOS POR ENTORNO
+  const CLIENT_ID_WEB = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com"; // Para la web / PC / sitio oficial
+  const CLIENT_ID_NATIVO = "839165918275-982hbgiokk82u7oogifshrkgr0b9gqac.apps.googleusercontent.com"; // Para la APK en Android
+  
   const B = "https://script.google.com/macros/s/AKfycby4ov5QtHYZUiw3CCXqpyxD8tU3LAiBSuZeKmTDcnY_FpTX_k946XlkJgEGoJTNsdOMLg/exec";
 
   function mostrarAviso(texto, esError = false) {
@@ -230,12 +234,9 @@
       const esNativo = Capacitor.isNativePlatform();
         
       if (esNativo) {
-        /*mostrarAviso("Modo App Nativa detectado: Activando plugin de autenticación móvil.");*/
-        
-        // Inicializamos el plugin nativo en la APK
+        // Inicializamos el plugin nativo en la APK usando estrictamente el cliente nativo
         try {
-          await window.Capacitor.Plugins.SocialLogin.initialize({google: { webClientId: A }});
-  
+          await window.Capacitor.Plugins.SocialLogin.initialize({google: { webClientId: CLIENT_ID_NATIVO }});
         } catch (e) {
           mostrarAviso("ERROR INIT: " + (e?.message || JSON.stringify(e)), true);
           return;
@@ -253,7 +254,6 @@
       }
 
       // --- ENTORNO WEB NORMAL (PC / GitHub Pages) ---
-      // Si entra desde la computadora, ejecuta exactamente tu mismo código de siempre
       const ua = navigator.userAgent;
       const isNativeAppUserAgent = ua.includes("ColumbaAppNative");
 
@@ -273,8 +273,9 @@
         return;
       }
 
+      // Inicialización web usando estrictamente el cliente web original
       google.accounts.id.initialize({
-        client_id: A,
+        client_id: CLIENT_ID_WEB,
         callback: window.C,
         context: "signin",
         ux_mode: "popup",
@@ -298,8 +299,7 @@
     try {
       mostrarAviso("Abriendo selector de cuenta en el dispositivo...");
 
-      const res =
-      await window.Capacitor.Plugins.SocialLogin.login({
+      const res = await window.Capacitor.Plugins.SocialLogin.login({
         provider: 'google',
         options: {
           scopes: ['profile', 'email']
@@ -358,6 +358,5 @@
     setTimeout(inicializarGIS, 300);
   });
 </script>
-
 </body>
 </html>
