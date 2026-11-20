@@ -294,7 +294,14 @@
 
         const pluginNativo =
           window.Capacitor?.Plugins?.SocialLogin;
-
+        
+          mostrarAviso(
+          window.Capacitor?.Plugins?.SocialLogin
+            ? "Plugin nativo encontrado"
+            : "Plugin nativo NO encontrado",
+          !window.Capacitor?.Plugins?.SocialLogin
+        );
+        
         if (!pluginNativo) {
           throw new Error(
             "Plugin nativo SocialLogin no encontrado"
