@@ -222,7 +222,7 @@
         if (esNativo) {
           try {
             await SocialLogin.initialize({ google: { webClientId: CLIENTE_ANDROID } });
-          } catch (e) {}
+          } catch (e) { }
 
           const buttonDiv = document.getElementById("buttonDiv");
           if (buttonDiv) {
@@ -287,7 +287,9 @@
     }
 
     window.ejecutarLoginMovilNativo = async function () {
+
       try {
+
         mostrarAviso("Conectando con Google...");
 
         const res = await SocialLogin.login({
@@ -295,21 +297,37 @@
         });
 
         const resData = res.result || res;
+
         const token =
           resData.idToken ||
           resData.accessToken ||
           resData?.authentication?.idToken;
 
-        if (token) {
-          mostrarAviso("Validando credenciales y dispositivo...");
-          window.location.href = construirURLFinal(token);
-        } else {
-          throw new Error("No se obtuvo la credencial de autenticación.");
+        if (!token) {
+
+          mostrarAviso(
+            "Login recibido pero sin token.", true);
+          return;
         }
 
+        mostrarAviso("Token recibido. Validando...");
+
+        const urlFinal = construirURLFinal(token);
+
+        mostrarAviso("Redirigiendo...");
+
+        window.location.href = urlFinal;
+
       } catch (err) {
-        mostrarAviso("No se pudo completar el inicio de sesión.", true);
+
+        const detalle = err?.message || String(err) || "Error desconocido";
+
+        mostrarAviso("ERROR: " + detalle, true);
+
+        console.error(err);
+
       }
+
     };
 
     window.lanzarLoginExterno = function () {
