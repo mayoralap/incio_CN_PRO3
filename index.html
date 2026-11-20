@@ -302,36 +302,9 @@
         "&huellaDigital=" + encodeURIComponent(huellaDigital);
     }
 
-    window.ejecutarLoginMovilNativo = async function () {
-
-  try {
-
-    const pluginNativo =
-      window.Capacitor?.Plugins?.SocialLogin;
-
-    mostrarAviso(
-  "PLUGIN NATIVO ENCONTRADO"
-);
-
-const metodos = Object.keys(pluginNativo || {});
-
-mostrarAviso(
-  metodos.join(", ")
-);
-
-return;
-
-  } catch (err) {
-
-    mostrarAviso(
-      "ERROR: " +
-      (err?.message || String(err)),
-      true
-    );
-
-  }
-
-};
+    window.ejecutarLoginMovilNativo = function () {
+      alert("CLICK OK");
+    };
 
     window.lanzarLoginExterno = function () {
       const urlDestino = "https://mayoralap.github.io/incio_CN_PRO3/";
