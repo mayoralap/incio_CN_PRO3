@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Columba Notebook – Verificación de Identidad</title>
+  <!-- SDK Web de Google (funciona perfecto en tu GitHub Pages para PC) -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <style>
@@ -84,7 +86,7 @@
       font-weight: 600;
       cursor: pointer;
       font-size: 0.95rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     @media (max-width: 480px) {
@@ -95,32 +97,33 @@
     }
   </style>
 </head>
+
 <body>
 
   <div class="main-card">
-    <img src="https://drive.google.com/thumbnail?id=15hTMpm_5aNuU2QKTWZGdK2XKdtpEog4w" alt="Logo Columba Notebook" class="logo-img">
+    <img src="https://drive.google.com/thumbnail?id=15hTMpm_5aNuU2QKTWZGdK2XKdtpEog4w" alt="Logo Columba Notebook"
+      class="logo-img">
     <h2>Verificación de Identidad</h2>
     <p>Para verificar el estado de tu cuenta y mostrarte las opciones correspondientes, inicia sesión con Google.</p>
-    
+
     <div id="buttonDiv"></div>
     <div id="mensaje"></div>
   </div>
 
-<script>
-    const A = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
-    /*const CLIENT_ID_WEB = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com"; // Para la web / PC / sitio oficial*/
-    /*const CLIENT_ID_NATIVO = "839165918275-982hbgiokk82u7oogifshrkgr0b9gqac.apps.googleusercontent.com"; // Para la APK en Android*/
-    
-    const B = "https://script.google.com/macros/s/AKfycby4ov5QtHYZUiw3CCXqpyxD8tU3LAiBSuZeKmTDcnY_FpTX_k946XlkJgEGoJTNsdOMLg/exec";
+  <script type="module">
+    import { Capacitor } from 'https://cdn.jsdelivr.net/npm/@capacitor/core@8.6.0/+esm';
+    import { SocialLogin } from 'https://cdn.jsdelivr.net/npm/@capgo/capacitor-social-login@8.7.11/+esm';
 
-    // Función auxiliar para mostrar mensajes claros en pantalla (tipo Toast visual)
+    const CLIENTE_WEB = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
+    const CLIENTE_ANDROID = "839165918275-9e3pbpo84he4ti6m038ldbg21cj37fdr.apps.googleusercontent.com";
+    const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycby4ov5QtHYZUiw3CCXqpyxD8tU3LAiBSuZeKmTDcnY_FpTX_k946XlkJgEGoJTNsdOMLg/exec";
+
     function mostrarAviso(texto, esError = false) {
       const m = document.getElementById('mensaje');
       if (m) {
         m.style.color = esError ? "#d32f2f" : "var(--color-primary)";
         m.innerText = texto;
       }
-      console.log("AVISO:", texto);
     }
 
     function generarHuellaDigitalNativa() {
@@ -201,58 +204,58 @@
       return deviceId;
     }
 
-    function C(r) {
-      mostrarAviso("Validando credenciales y dispositivo... redirigiendo.");
-      
-      if (r && r.credential) {
-        const deviceId = obtenerOGenerarDeviceId();
-        const huellaDigital = generarHuellaDigitalNativa();
-        const devName = obtenerNombreAmigable();
-        localStorage.setItem('cn_device_name', devName);
+    window.C = function (r) {
+      mostrarAviso("Validando credenciales y dispositivo...");
 
-        const urlFinal = B + "?token=" + encodeURIComponent(r.credential) + 
-                           "&deviceId=" + encodeURIComponent(deviceId) + 
-                           "&devName=" + encodeURIComponent(devName) +
-                           "&huellaDigital=" + encodeURIComponent(huellaDigital);
-
-        window.location.href = urlFinal;
-      } else {
-        mostrarAviso("Error: No se recibió una credencial válida de Google.", true);
-        alert("Error de credencial GIS: " + JSON.stringify(r));
+      if (!r || !r.credential) {
+        mostrarAviso("Error: No se recibió una credencial válida.", true);
+        return;
       }
-    }
 
-    function inicializarGIS() {
+      window.location.href = construirURLFinal(r.credential);
+    };
+
+    async function inicializarGIS() {
       try {
-        mostrarAviso("Analizando entorno de ejecución...");
+        const esNativo = Capacitor.isNativePlatform();
 
-        // Detectar si el User-Agent lleva nuestra firma nativa de la APK
-        const ua = navigator.userAgent;
-        const isNativeApp = ua.includes("ColumbaAppNative");
+        if (esNativo) {
+          try {
+            await SocialLogin.initialize({ google: { webClientId: CLIENTE_ANDROID } });
+          } catch (e) {}
 
-        if (isNativeApp) {
-          mostrarAviso("Modo App Nativo detectado: Adaptando botón para navegador externo.");
-          
-          // En la APK, transformamos el botón para que saque al usuario al Chrome real del teléfono
           const buttonDiv = document.getElementById("buttonDiv");
           if (buttonDiv) {
             buttonDiv.innerHTML = `
-              <button onclick="lanzarLoginExterno()" style="width: 290px; height: 42px; background: #1a73e8; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                Iniciar sesión con Google (Navegador)
-              </button>`;
+            <button onclick="ejecutarLoginMovilNativo()" style="width: 290px; height: 42px; background: #1a73e8; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              Iniciar sesión con Google
+            </button>`;
           }
           return;
         }
 
-        // Entorno Web Estándar (PC o PWA en computadora): Funciona exactamente igual que siempre
+        const ua = navigator.userAgent;
+        const isNativeAppUserAgent = ua.includes("ColumbaAppNative");
+
+        if (isNativeAppUserAgent) {
+          const buttonDiv = document.getElementById("buttonDiv");
+          if (buttonDiv) {
+            buttonDiv.innerHTML = `
+            <button onclick="lanzarLoginExterno()" style="width: 290px; height: 42px; background: #1a73e8; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              Iniciar sesión con Google (Navegador)
+            </button>`;
+          }
+          return;
+        }
+
         if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
           setTimeout(inicializarGIS, 200);
           return;
         }
 
         google.accounts.id.initialize({
-          client_id: A,
-          callback: C,
+          client_id: CLIENTE_WEB,
+          callback: window.C,
           context: "signin",
           ux_mode: "popup",
           auto_select: false,
@@ -265,29 +268,65 @@
         );
 
       } catch (err) {
-        console.error("Error al inicializar:", err);
-        mostrarAviso("Excepción: " + err.message, true);
+        mostrarAviso("Error al inicializar el inicio de sesión.", true);
       }
     }
 
-    function lanzarLoginExterno() {
-      // URL de tu plataforma en GitHub Pages con su versión correspondiente
+    function construirURLFinal(token) {
+      const deviceId = obtenerOGenerarDeviceId();
+      const huellaDigital = generarHuellaDigitalNativa();
+      const devName = obtenerNombreAmigable();
+
+      localStorage.setItem('cn_device_name', devName);
+
+      return URL_APPS_SCRIPT +
+        "?token=" + encodeURIComponent(token) +
+        "&deviceId=" + encodeURIComponent(deviceId) +
+        "&devName=" + encodeURIComponent(devName) +
+        "&huellaDigital=" + encodeURIComponent(huellaDigital);
+    }
+
+    window.ejecutarLoginMovilNativo = async function () {
+      try {
+        mostrarAviso("Conectando con Google...");
+
+        const res = await SocialLogin.login({
+          provider: 'google'
+        });
+
+        const resData = res.result || res;
+        const token =
+          resData.idToken ||
+          resData.accessToken ||
+          resData?.authentication?.idToken;
+
+        if (token) {
+          mostrarAviso("Validando credenciales y dispositivo...");
+          window.location.href = construirURLFinal(token);
+        } else {
+          throw new Error("No se obtuvo la credencial de autenticación.");
+        }
+
+      } catch (err) {
+        mostrarAviso("No se pudo completar el inicio de sesión.", true);
+      }
+    };
+
+    window.lanzarLoginExterno = function () {
       const urlDestino = "https://mayoralap.github.io/incio_CN_PRO3/";
-      
       const ua = navigator.userAgent;
       if (ua.includes("ColumbaAppNative") || ua.includes("Android")) {
-        // Forzar la apertura directa en Chrome externo usando el Intent nativo de Android
         window.location.href = "intent://" + urlDestino.replace("https://", "") + "#Intent;scheme=https;package=com.android.chrome;end";
       } else {
-        // Comportamiento normal para PC o navegador web
         window.open(urlDestino, "_blank");
       }
-    }
+    };
 
     window.addEventListener('load', () => {
       setTimeout(inicializarGIS, 300);
     });
-</script>
+  </script>
 
 </body>
+
 </html>
