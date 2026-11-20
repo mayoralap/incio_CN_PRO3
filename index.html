@@ -292,9 +292,12 @@
 
         mostrarAviso("Conectando con Google...");
 
-        const res = await SocialLogin.login({
-          provider: 'google'
-        });
+        const res = await window.Capacitor
+          .Plugins
+          .SocialLogin
+          .login({
+            provider: 'google'
+          });
 
         const resData = res.result || res;
 
@@ -329,7 +332,7 @@
       }
 
     };
-    /* lanzarLoginExterno */
+
     window.lanzarLoginExterno = function () {
       const urlDestino = "https://mayoralap.github.io/incio_CN_PRO3/";
       const ua = navigator.userAgent;
