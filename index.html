@@ -286,67 +286,71 @@
         "&huellaDigital=" + encodeURIComponent(huellaDigital);
     }
 
-    window.ejecutarLoginMovilNativo = async function () {
+    window.ejecutarLoginMovilNativo = async function () {window.ejecutarLoginMovilNativo = async function () {
 
-      try {
+  try {
 
-        mostrarAviso("Conectando con Google...");
+    const pluginNativo =
+      window.Capacitor?.Plugins?.SocialLogin;
 
-        const pluginNativo =
-          window.Capacitor?.Plugins?.SocialLogin;
-        
-          mostrarAviso(
-          window.Capacitor?.Plugins?.SocialLogin
-            ? "Plugin nativo encontrado"
-            : "Plugin nativo NO encontrado",
-          !window.Capacitor?.Plugins?.SocialLogin
-        );
-        
-        if (!pluginNativo) {
-          throw new Error(
-            "Plugin nativo SocialLogin no encontrado"
-          );
-        }
+    if (!pluginNativo) {
 
-        const res = await pluginNativo.login({
-          provider: "google"
-        });
+      mostrarAviso(
+        "Plugin Android SocialLogin NO encontrado.",
+        true
+      );
 
+      return;
+    }
 
-        const resData = res.result || res;
+    mostrarAviso(
+      "Plugin Android encontrado."
+    );
 
-        const token =
-          resData.idToken ||
-          resData.accessToken ||
-          resData?.authentication?.idToken;
+    const res = await pluginNativo.login({
+      provider: "google"
+    });
 
-        if (!token) {
+    const resData =
+      res?.result || res;
 
-          mostrarAviso(
-            "Login recibido pero sin token.", true);
-          return;
-        }
+    const token =
+      resData?.idToken ||
+      resData?.accessToken ||
+      resData?.authentication?.idToken;
 
-        mostrarAviso("Token recibido. Validando...");
+    if (!token) {
 
-        const urlFinal = construirURLFinal(token);
+      mostrarAviso(
+        "Login correcto pero sin token.",
+        true
+      );
 
-        mostrarAviso("Redirigiendo...");
+      return;
+    }
 
-        window.location.href = urlFinal;
+    mostrarAviso(
+      "Token recibido. Validando..."
+    );
 
-      } catch (err) {
+    window.location.href =
+      construirURLFinal(token);
 
-        const detalle = err?.message || String(err) || "Error desconocido";
+  } catch (err) {
 
-        mostrarAviso("ERROR: " + detalle, true);
+    mostrarAviso(
+      "ERROR: " +
+      (
+        err?.message ||
+        String(err) ||
+        "Error desconocido"
+      ),
+      true
+    );
 
-        console.error(err);
+  }
 
-      }
-
-    };
-
+};
     window.lanzarLoginExterno = function () {
       const urlDestino = "https://mayoralap.github.io/incio_CN_PRO3/";
       const ua = navigator.userAgent;
