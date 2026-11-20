@@ -288,19 +288,63 @@
 
     window.ejecutarLoginMovilNativo = async function () {
 
-  const pluginNativo =
-    window.Capacitor?.Plugins?.SocialLogin;
+  try {
 
-  mostrarAviso(
-    pluginNativo
-      ? "PLUGIN NATIVO ENCONTRADO"
-      : "PLUGIN NATIVO NO ENCONTRADO",
-    !pluginNativo
-  );
+    const pluginNativo =
+      window.Capacitor?.Plugins?.SocialLogin;
 
-  return;
+    if (!pluginNativo) {
+      mostrarAviso(
+        "Plugin Android SocialLogin NO encontrado.",
+        true
+      );
+      return;
+    }
+
+    mostrarAviso(
+      "Plugin Android encontrado."
+    );
+
+    const res = await pluginNativo.login({
+      provider: "google"
+    });
+
+    const resData = res?.result || res;
+
+    const token =
+      resData?.idToken ||
+      resData?.accessToken ||
+      resData?.authentication?.idToken;
+
+    if (!token) {
+
+      mostrarAviso(
+        "Login correcto pero sin token.",
+        true
+      );
+
+      return;
+    }
+
+    mostrarAviso(
+      "Token recibido. Validando..."
+    );
+
+    window.location.href =
+      construirURLFinal(token);
+
+  } catch (err) {
+
+    mostrarAviso(
+      "ERROR: " +
+      (err?.message || String(err)),
+      true
+    );
+
+  }
 
 };
+
     window.lanzarLoginExterno = function () {
       const urlDestino = "https://mayoralap.github.io/incio_CN_PRO3/";
       const ua = navigator.userAgent;
