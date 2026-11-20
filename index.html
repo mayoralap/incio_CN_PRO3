@@ -112,7 +112,7 @@
 
   <script type="module">
     import { Capacitor } from 'https://cdn.jsdelivr.net/npm/@capacitor/core@8.6.0/+esm';
-    import { SocialLogin } from 'https://cdn.jsdelivr.net/npm/@capgo/capacitor-social-login@8.7.11/+esm';
+  
 
     const CLIENTE_WEB = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
     const CLIENTE_ANDROID = "839165918275-9e3pbpo84he4ti6m038ldbg21cj37fdr.apps.googleusercontent.com";
@@ -220,17 +220,33 @@
         const esNativo = Capacitor.isNativePlatform();
 
         if (esNativo) {
-          try {
-            await SocialLogin.initialize({ google: { webClientId: CLIENTE_ANDROID } });
-          } catch (e) { }
 
-          const buttonDiv = document.getElementById("buttonDiv");
+          mostrarAviso(
+            "Modo App Nativa detectado."
+          );
+
+          const buttonDiv =
+            document.getElementById("buttonDiv");
+
           if (buttonDiv) {
+
             buttonDiv.innerHTML = `
-            <button onclick="ejecutarLoginMovilNativo()" style="width: 290px; height: 42px; background: #1a73e8; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-              Iniciar sesión con Google
-            </button>`;
+      <button
+        onclick="ejecutarLoginMovilNativo()"
+        style="
+          width:290px;
+          height:42px;
+          background:#1a73e8;
+          color:white;
+          border:none;
+          border-radius:4px;
+          font-weight:600;
+          cursor:pointer;
+        ">
+        Iniciar sesión con Google
+      </button>`;
           }
+
           return;
         }
 
@@ -293,45 +309,17 @@
     const pluginNativo =
       window.Capacitor?.Plugins?.SocialLogin;
 
-    if (!pluginNativo) {
-      mostrarAviso(
-        "Plugin Android SocialLogin NO encontrado.",
-        true
-      );
-      return;
-    }
-
     mostrarAviso(
-      "Plugin Android encontrado."
-    );
+  "PLUGIN NATIVO ENCONTRADO"
+);
 
-    const res = await pluginNativo.login({
-      provider: "google"
-    });
+const metodos = Object.keys(pluginNativo || {});
 
-    const resData = res?.result || res;
+mostrarAviso(
+  metodos.join(", ")
+);
 
-    const token =
-      resData?.idToken ||
-      resData?.accessToken ||
-      resData?.authentication?.idToken;
-
-    if (!token) {
-
-      mostrarAviso(
-        "Login correcto pero sin token.",
-        true
-      );
-
-      return;
-    }
-
-    mostrarAviso(
-      "Token recibido. Validando..."
-    );
-
-    window.location.href =
-      construirURLFinal(token);
+return;
 
   } catch (err) {
 
