@@ -286,69 +286,19 @@
         "&huellaDigital=" + encodeURIComponent(huellaDigital);
     }
 
-    window.ejecutarLoginMovilNativo = async function () {window.ejecutarLoginMovilNativo = async function () {
+    window.ejecutarLoginMovilNativo = async function () {
 
-  try {
+  const pluginNativo =
+    window.Capacitor?.Plugins?.SocialLogin;
 
-    const pluginNativo =
-      window.Capacitor?.Plugins?.SocialLogin;
+  mostrarAviso(
+    pluginNativo
+      ? "PLUGIN NATIVO ENCONTRADO"
+      : "PLUGIN NATIVO NO ENCONTRADO",
+    !pluginNativo
+  );
 
-    if (!pluginNativo) {
-
-      mostrarAviso(
-        "Plugin Android SocialLogin NO encontrado.",
-        true
-      );
-
-      return;
-    }
-
-    mostrarAviso(
-      "Plugin Android encontrado."
-    );
-
-    const res = await pluginNativo.login({
-      provider: "google"
-    });
-
-    const resData =
-      res?.result || res;
-
-    const token =
-      resData?.idToken ||
-      resData?.accessToken ||
-      resData?.authentication?.idToken;
-
-    if (!token) {
-
-      mostrarAviso(
-        "Login correcto pero sin token.",
-        true
-      );
-
-      return;
-    }
-
-    mostrarAviso(
-      "Token recibido. Validando..."
-    );
-
-    window.location.href =
-      construirURLFinal(token);
-
-  } catch (err) {
-
-    mostrarAviso(
-      "ERROR: " +
-      (
-        err?.message ||
-        String(err) ||
-        "Error desconocido"
-      ),
-      true
-    );
-
-  }
+  return;
 
 };
     window.lanzarLoginExterno = function () {
