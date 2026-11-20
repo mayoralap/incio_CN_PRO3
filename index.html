@@ -292,12 +292,19 @@
 
         mostrarAviso("Conectando con Google...");
 
-        const res = await window.Capacitor
-          .Plugins
-          .SocialLogin
-          .login({
-            provider: 'google'
-          });
+        const pluginNativo =
+          window.Capacitor?.Plugins?.SocialLogin;
+
+        if (!pluginNativo) {
+          throw new Error(
+            "Plugin nativo SocialLogin no encontrado"
+          );
+        }
+
+        const res = await pluginNativo.login({
+          provider: "google"
+        });
+
 
         const resData = res.result || res;
 
