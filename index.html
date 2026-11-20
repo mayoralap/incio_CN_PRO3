@@ -111,13 +111,10 @@
   </div>
 
   <script type="module">
-    // Importamos el detector de entorno de Capacitor
     import { Capacitor } from 'https://cdn.jsdelivr.net/npm/@capacitor/core@8.6.0/+esm';
     import { SocialLogin } from 'https://cdn.jsdelivr.net/npm/@capgo/capacitor-social-login@8.7.11/+esm';
 
-    const CLIENTE_WEB =
-      "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
-
+    const CLIENTE_WEB = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
     const CLIENTE_ANDROID = "839165918275-9e3pbpo84he4ti6m038ldbg21cj37fdr.apps.googleusercontent.com";
     const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycby4ov5QtHYZUiw3CCXqpyxD8tU3LAiBSuZeKmTDcnY_FpTX_k946XlkJgEGoJTNsdOMLg/exec";
 
@@ -127,7 +124,6 @@
         m.style.color = esError ? "#d32f2f" : "var(--color-primary)";
         m.innerText = texto;
       }
-      console.log("AVISO:", texto);
     }
 
     function generarHuellaDigitalNativa() {
@@ -208,57 +204,26 @@
       return deviceId;
     }
 
-    // Callback tradicional para cuando la PC usa el flujo web de Google
     window.C = function (r) {
-
-      mostrarAviso(
-        "Validando credenciales y dispositivo..."
-      );
+      mostrarAviso("Validando credenciales y dispositivo...");
 
       if (!r || !r.credential) {
-
-        mostrarAviso(
-          "Error: No se recibió una credencial válida.",
-          true
-        );
-
+        mostrarAviso("Error: No se recibió una credencial válida.", true);
         return;
       }
 
-      window.location.href =
-        construirURLFinal(
-          r.credential
-        );
+      window.location.href = construirURLFinal(r.credential);
     };
 
     async function inicializarGIS() {
       try {
-        mostrarAviso("Analizando entorno de ejecución...");
-
-        // VERIFICACIÓN INTELIGENTE DE ENTORNO
         const esNativo = Capacitor.isNativePlatform();
 
-        console.log(
-          "ES NATIVO:",
-          esNativo
-        );
-
-        console.log(
-          "PLATAFORMA:",
-          Capacitor.getPlatform()
-        );
-
         if (esNativo) {
-          mostrarAviso("Modo App Nativa detectado: Activando plugin de autenticación móvil.");
-
-          // Inicializamos el plugin nativo en la APK
           try {
             await SocialLogin.initialize({ google: { webClientId: CLIENTE_ANDROID } });
-          } catch (e) {
-            console.warn("Error inicializando SocialLogin:", e);
-          }
+          } catch (e) {}
 
-          // Renderizamos un botón nativo que llama al manejador del teléfono
           const buttonDiv = document.getElementById("buttonDiv");
           if (buttonDiv) {
             buttonDiv.innerHTML = `
@@ -269,8 +234,6 @@
           return;
         }
 
-        // --- ENTORNO WEB NORMAL (PC / GitHub Pages) ---
-        // Si entra desde la computadora, ejecuta exactamente tu mismo código de siempre
         const ua = navigator.userAgent;
         const isNativeAppUserAgent = ua.includes("ColumbaAppNative");
 
@@ -305,21 +268,16 @@
         );
 
       } catch (err) {
-        console.error("Error al inicializar:", err);
-        mostrarAviso("Excepción: " + err.message, true);
+        mostrarAviso("Error al inicializar el inicio de sesión.", true);
       }
     }
 
     function construirURLFinal(token) {
-
       const deviceId = obtenerOGenerarDeviceId();
       const huellaDigital = generarHuellaDigitalNativa();
       const devName = obtenerNombreAmigable();
 
-      localStorage.setItem(
-        'cn_device_name',
-        devName
-      );
+      localStorage.setItem('cn_device_name', devName);
 
       return URL_APPS_SCRIPT +
         "?token=" + encodeURIComponent(token) +
@@ -328,93 +286,30 @@
         "&huellaDigital=" + encodeURIComponent(huellaDigital);
     }
 
-    // Función exclusiva para el login nativo dentro de la APK móvil
     window.ejecutarLoginMovilNativo = async function () {
-
-      alert(
-        "PLUGIN=" +
-        typeof window.Capacitor?.Plugins?.SocialLogin
-      );
-      alert(
-        JSON.stringify(
-          Object.keys(
-            window.Capacitor?.Plugins || {}
-          )
-        )
-      );
-
       try {
-
-        mostrarAviso("VERSION 777");
-
-        console.log("Capacitor:", Capacitor);
-
-        console.log(
-          "SocialLogin:",
-          SocialLogin
-        );
+        mostrarAviso("Conectando con Google...");
 
         const res = await SocialLogin.login({
           provider: 'google'
         });
 
-        console.log(
-          "RESPUESTA LOGIN:",
-          JSON.stringify(res, null, 2)
-        );
-
-        mostrarAviso(
-          "Login completado"
-        );
-
         const resData = res.result || res;
-
         const token =
           resData.idToken ||
           resData.accessToken ||
           resData?.authentication?.idToken;
 
-        mostrarAviso(
-          "TOKEN=" + (token ? "ENCONTRADO" : "NO")
-        );
-
         if (token) {
-
-          mostrarAviso("TOKEN OK");
-
-          window.location.href =
-            construirURLFinal(token);
-
+          mostrarAviso("Validando credenciales y dispositivo...");
+          window.location.href = construirURLFinal(token);
         } else {
-
-          console.log(
-            "RESPUESTA COMPLETA:",
-            JSON.stringify(res, null, 2)
-          );
-
-          throw new Error(
-            "No se encontró idToken"
-          );
+          throw new Error("No se obtuvo la credencial de autenticación.");
         }
 
       } catch (err) {
-
-        console.error("ERROR COMPLETO", err);
-
-        const textoError =
-          "typeof: " + typeof err +
-          "\nstring: " + String(err) +
-          "\nmessage: " + (err?.message || "SIN MESSAGE") +
-          "\ncode: " + (err?.code || "SIN CODE");
-
-        alert(textoError);
-
-        mostrarAviso(
-          textoError,
-          true
-        );
+        mostrarAviso("No se pudo completar el inicio de sesión.", true);
       }
-
     };
 
     window.lanzarLoginExterno = function () {
