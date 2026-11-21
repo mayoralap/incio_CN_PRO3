@@ -7,8 +7,6 @@
 
   <title>Columba Notebook – Verificación de Identidad</title>
 
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-
   <style>
     :root {
       --color-primary: #1a73e8;
@@ -66,7 +64,7 @@
     <img src="https://drive.google.com/thumbnail?id=15hTMpm_5aNuU2QKTWZGdK2XKdtpEog4w" class="logo-img"
       alt="Columba Notebook">
 
-    <h2>Verificación de Identidad v3</h2>
+    <h2>Verificación de Identidad v4</h2>
 
     <p>
       Para verificar el estado de tu cuenta inicia sesión con Google.
@@ -87,6 +85,9 @@
 
     const CLIENTE_WEB =
       "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
+
+    const CLIENTE_ANDROID =
+      "839165918275-9e3pbpo84he4ti6m038ldbg21cj37fdr.apps.googleusercontent.com";
 
     const URL_APPS_SCRIPT =
       "https://script.google.com/macros/s/AKfycby4ov5QtHYZUiw3CCXqpyxD8tU3LAiBSuZeKmTDcnY_FpTX_k946XlkJgEGoJTNsdOMLg/exec";
@@ -150,6 +151,71 @@
       );
     }
 
+    function extraerTokenDeRespuesta(respuesta) {
+      const datos = respuesta?.result || respuesta || {};
+      return (
+        datos.idToken ||
+        datos.accessToken ||
+        datos.serverAuthCode ||
+        datos?.authentication?.idToken ||
+        datos?.authentication?.accessToken ||
+        null
+      );
+    }
+
+    async function inicializarPluginNativo() {
+      if (socialLoginInicializado) return true;
+
+      const pluginNativo = obtenerPluginSocialLogin();
+      if (!pluginNativo?.initialize || !pluginNativo?.login) {
+        return false;
+      }
+
+      await pluginNativo.initialize({
+        google: {
+          webClientId: CLIENTE_ANDROID
+        }
+      });
+
+      socialLoginInicializado = true;
+      return true;
+    }
+
+    globalThis.ejecutarLoginMovilNativo = async function () {
+      try {
+        mostrarAviso("Conectando con Google en Android...");
+
+        const pluginListo = await inicializarPluginNativo();
+        const pluginNativo = obtenerPluginSocialLogin();
+
+        if (!pluginListo || !pluginNativo?.login) {
+          mostrarAviso("Plugin SocialLogin no disponible en Android", true);
+          return;
+        }
+
+        const respuesta = await pluginNativo.login({
+          provider: "google",
+          options: {}
+        });
+
+        const token = extraerTokenDeRespuesta(respuesta);
+
+        if (!token) {
+          mostrarAviso("No se obtuvo token de Google en Android", true);
+          return;
+        }
+
+        mostrarAviso("Token obtenido, redirigiendo...");
+        window.location.href = construirURLFinal(token);
+
+      } catch (error) {
+        mostrarAviso(
+          "Error en login nativo Android: " + (error?.message || String(error)),
+          true
+        );
+      }
+    };
+
     window.C = function (resp) {
       if (!resp?.credential) {
         mostrarAviso("No se recibió credencial", true);
@@ -160,85 +226,19 @@
       window.location.href = construirURLFinal(resp.credential);
     };
 
-    function renderizarBotonWeb(clienteId = CLIENTE_WEB) {
-      const buttonDiv = document.getElementById("buttonDiv");
-      if (!buttonDiv) return false;
+    async function cargarScriptGISWeb() {
+      if (window.google?.accounts?.id) return true;
 
-      if (window.google?.accounts?.id) {
-        google.accounts.id.initialize({
-          client_id: clienteId,
-          callback: C
-        });
-
-        google.accounts.id.renderButton(
-          buttonDiv,
-          {
-            theme: "outline",
-            size: "large",
-            width: 290
-          }
-        );
-        return true;
-      }
-
-      return false;
-    }
-
-    async function inicializarPluginNativo() {
-      if (socialLoginInicializado) return true;
-      const pluginNativo = obtenerPluginSocialLogin();
-      if (!pluginNativo?.initialize || !pluginNativo?.login) return false;
-
-      await pluginNativo.initialize({
-        google: {
-          webClientId: CLIENTE_WEB
-        }
+      return new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.src = "https://accounts.google.com/gsi/client";
+        script.async = true;
+        script.defer = true;
+        script.onload = () => resolve(Boolean(window.google?.accounts?.id));
+        script.onerror = () => resolve(false);
+        document.head.appendChild(script);
       });
-      socialLoginInicializado = true;
-      return true;
     }
-
-    globalThis.ejecutarLoginMovilNativo = async function () {
-      try {
-        mostrarAviso("Conectando con Google...");
-
-        const pluginListo = await inicializarPluginNativo();
-        const pluginNativo = obtenerPluginSocialLogin();
-
-        if (!pluginListo || !pluginNativo?.login) {
-          mostrarAviso("Sin plugin nativo; usando acceso web...");
-          renderizarBotonWeb(CLIENTE_WEB);
-          return;
-        }
-
-        const respuesta = await pluginNativo.login({
-          provider: "google",
-          options: {}
-        });
-
-        const datos = respuesta?.result || respuesta || {};
-
-        const token =
-          datos.idToken ||
-          datos.accessToken ||
-          datos?.authentication?.idToken ||
-          datos?.authentication?.accessToken;
-
-        if (!token) {
-          mostrarAviso("Sin token nativo; usando acceso web...");
-          renderizarBotonWeb(CLIENTE_WEB);
-          return;
-        }
-
-        mostrarAviso("Validando credenciales...");
-        window.location.href = construirURLFinal(token);
-
-      } catch (error) {
-        const detalle = error?.message || String(error);
-        mostrarAviso("Nativo: " + detalle + " — mostrando acceso web...", true);
-        renderizarBotonWeb(CLIENTE_WEB);
-      }
-    };
 
     async function inicializar() {
       const esNativo = Capacitor.isNativePlatform();
@@ -246,7 +246,9 @@
       if (esNativo) {
         try {
           await inicializarPluginNativo();
-        } catch (e) {}
+        } catch (e) {
+          mostrarAviso("Aviso al iniciar plugin: " + (e?.message || String(e)), true);
+        }
 
         const buttonDiv = document.getElementById("buttonDiv");
         buttonDiv.innerHTML = `
@@ -273,7 +275,22 @@
         return;
       }
 
-      if (!renderizarBotonWeb(CLIENTE_WEB)) {
+      const gisListo = await cargarScriptGISWeb();
+      if (gisListo && window.google?.accounts?.id) {
+        google.accounts.id.initialize({
+          client_id: CLIENTE_WEB,
+          callback: C
+        });
+
+        google.accounts.id.renderButton(
+          document.getElementById("buttonDiv"),
+          {
+            theme: "outline",
+            size: "large",
+            width: 290
+          }
+        );
+      } else {
         mostrarAviso("Google GIS no cargó", true);
       }
     }
