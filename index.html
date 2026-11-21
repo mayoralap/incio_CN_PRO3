@@ -191,195 +191,74 @@
 
     async function inicializar() {
 
-      const esNativo =
-        Capacitor.isNativePlatform();
+  const esNativo =
+    Capacitor.isNativePlatform();
 
-      console.log(
-        "Capacitor.isNativePlatform:",
-        esNativo
+  if (esNativo) {
+
+    mostrarAviso(
+      "Modo Android detectado"
+    );
+
+    const buttonDiv =
+      document.getElementById(
+        "buttonDiv"
       );
 
-      if (esNativo) {
-
-        mostrarAviso(
-          "Modo Android detectado"
-        );
-
-        document.getElementById(
-          "buttonDiv"
-        ).innerHTML =
-          `
-    <button
-      id="btnGoogleLogin"
-      style="
-        width:290px;
-        height:42px;
-        border:none;
-        border-radius:4px;
-        background:#1a73e8;
-        color:white;
-        cursor:pointer;
-        font-weight:600;">
-      Iniciar sesión con Google
-    </button>
+    buttonDiv.innerHTML = `
+      <button
+        id="btnGoogleLogin"
+        style="
+          width:290px;
+          height:42px;
+          border:none;
+          border-radius:4px;
+          background:#1a73e8;
+          color:white;
+          cursor:pointer;
+          font-weight:600;">
+        Iniciar sesión con Google
+      </button>
     `;
 
-        document
-          .getElementById("btnGoogleLogin")
-          .addEventListener(
-            "click",
-            async () => {
+    const btn =
+      document.getElementById(
+        "btnGoogleLogin"
+      );
 
-              try {
+    if (btn) {
 
-                mostrarAviso(
-                  "PASO 1 - Click recibido"
-                );
-
-                alert(
-                  JSON.stringify(
-                    Object.keys(
-                      window.Capacitor?.Plugins || {}
-                    ),
-                    null,
-                    2
-                  )
-                );
-
-                console.log(
-                  "Plugins:",
-                  window.Capacitor?.Plugins
-                );
-
-                console.log(
-                  "SocialLogin:",
-                  window.Capacitor?.Plugins?.SocialLogin
-                );
-
-                alert(
-                  JSON.stringify(
-                    Object.keys(
-                      window.Capacitor?.Plugins || {}
-                    )
-                  )
-                );
-
-                const deviceId =
-                  obtenerOGenerarDeviceId();
-
-                console.log(
-                  "deviceId:",
-                  deviceId
-                );
-
-                const huellaDigital =
-                  generarHuellaDigitalNativa();
-
-                console.log(
-                  "huella:",
-                  huellaDigital
-                );
-
-                const devName =
-                  navigator.userAgent;
-
-                console.log(
-                  "devName:",
-                  devName
-                );
-
-                /*
-                 * AQUÍ IRÁ EL TOKEN
-                 * CUANDO CONECTEMOS
-                 * @capgo/capacitor-social-login
-                 */
-                const token =
-                  window.tokenGoogle || "";
-
-                if (!token) {
-
-                  mostrarAviso(
-                    "Token Google no disponible"
-                  );
-
-                  console.warn(
-                    "window.tokenGoogle vacío"
-                  );
-
-                  return;
-                }
-
-                mostrarAviso(
-                  "Token recibido"
-                );
-
-                const urlFinal =
-                  construirURLFinal(
-                    token
-                  );
-
-                console.log(
-                  "urlFinal:",
-                  urlFinal
-                );
-
-                mostrarAviso(
-                  "Navegando..."
-                );
-
-                window.location.href =
-                  urlFinal;
-
-              }
-              catch (error) {
-
-                console.error(error);
-
-                mostrarAviso(
-                  "ERROR: " +
-                  (error.message || error),
-                  true
-                );
-
-              }
-
-            }
-          );
-
-        return;
-      }
-
-      if (window.google) {
-
-        google.accounts.id.initialize({
-          client_id: CLIENTE_WEB,
-          callback: C
-        });
-
-        google.accounts.id.renderButton(
-          document.getElementById("buttonDiv"),
-          {
-            theme: "outline",
-            size: "large",
-            width: 290
-          }
-        );
-
-        mostrarAviso(
-          "Login Web preparado"
-        );
-
-      }
-      else {
-
-        mostrarAviso(
-          "Google GIS no cargó",
-          true
-        );
-
-      }
+      btn.addEventListener(
+        "click",
+        ejecutarLoginMovilNativo
+      );
 
     }
+
+    return;
+  }
+
+  if (window.google) {
+
+    google.accounts.id.initialize({
+      client_id: CLIENTE_WEB,
+      callback: C
+    });
+
+    google.accounts.id.renderButton(
+      document.getElementById(
+        "buttonDiv"
+      ),
+      {
+        theme: "outline",
+        size: "large",
+        width: 290
+      }
+    );
+
+  }
+
+}
 
     window.addEventListener(
       "load",
