@@ -88,20 +88,16 @@
     const URL_APPS_SCRIPT =
       "https://script.google.com/macros/s/AKfycby4ov5QtHYZUiw3CCXqpyxD8tU3LAiBSuZeKmTDcnY_FpTX_k946XlkJgEGoJTNsdOMLg/exec";
 
+    let socialLoginInicializado = false;
+
     function mostrarAviso(texto, error = false) {
-
       const m = document.getElementById("mensaje");
-
-      m.style.color =
-        error
-          ? "#d32f2f"
-          : "#1a73e8";
-
+      if (!m) return;
+      m.style.color = error ? "#d32f2f" : "#1a73e8";
       m.textContent = texto;
     }
 
     function generarHuellaDigitalNativa() {
-
       const raw = [
         navigator.userAgent,
         navigator.language,
@@ -111,7 +107,6 @@
       ].join("|");
 
       let hash = 0;
-
       for (let i = 0; i < raw.length; i++) {
         hash = ((hash << 5) - hash) + raw.charCodeAt(i);
         hash |= 0;
@@ -121,242 +116,149 @@
     }
 
     function obtenerOGenerarDeviceId() {
-
-      let id =
-        localStorage.getItem("cn_device_id");
-
+      let id = localStorage.getItem("cn_device_id");
       if (!id) {
-
         id =
           "DEV-" +
           Math.random()
             .toString(36)
             .substring(2, 10)
             .toUpperCase();
-
-        localStorage.setItem(
-          "cn_device_id",
-          id
-        );
+        localStorage.setItem("cn_device_id", id);
       }
-
       return id;
     }
 
     function construirURLFinal(token) {
-
-      const deviceId =
-        obtenerOGenerarDeviceId();
-
-      const huellaDigital =
-        generarHuellaDigitalNativa();
-
-      const devName =
-        navigator.userAgent;
+      const deviceId = obtenerOGenerarDeviceId();
+      const huellaDigital = generarHuellaDigitalNativa();
+      const devName = navigator.userAgent;
 
       return (
         URL_APPS_SCRIPT +
-        "?token=" +
-        encodeURIComponent(token) +
-        "&deviceId=" +
-        encodeURIComponent(deviceId) +
-        "&devName=" +
-        encodeURIComponent(devName) +
-        "&huellaDigital=" +
-        encodeURIComponent(huellaDigital)
+        "?token=" + encodeURIComponent(token) +
+        "&deviceId=" + encodeURIComponent(deviceId) +
+        "&devName=" + encodeURIComponent(devName) +
+        "&huellaDigital=" + encodeURIComponent(huellaDigital)
       );
     }
 
     window.C = function (resp) {
-
       if (!resp?.credential) {
+        mostrarAviso("No se recibió credencial", true);
+        return;
+      }
 
-        mostrarAviso(
-          "No se recibió credencial",
-          true
-        );
+      mostrarAviso("Acceso correcto...");
+      window.location.href = construirURLFinal(resp.credential);
+    };
+
+    async function inicializarPluginNativo() {
+      if (socialLoginInicializado) return;
+      const pluginNativo = window.Capacitor?.Plugins?.SocialLogin;
+      if (!pluginNativo) return;
+
+      await pluginNativo.initialize({
+        google: {
+          webClientId: CLIENTE_ANDROID
+        }
+      });
+      socialLoginInicializado = true;
+    }
+
+    async function inicializar() {
+      const esNativo = Capacitor.isNativePlatform();
+
+      if (esNativo) {
+        try {
+          await inicializarPluginNativo();
+        } catch (e) {}
+
+        const buttonDiv = document.getElementById("buttonDiv");
+        buttonDiv.innerHTML = `
+          <button
+            id="btnGoogleLogin"
+            style="
+              width:290px;
+              height:42px;
+              border:none;
+              border-radius:4px;
+              background:#1a73e8;
+              color:white;
+              cursor:pointer;
+              font-weight:600;">
+            Iniciar sesión con Google
+          </button>
+        `;
+
+        const btn = document.getElementById("btnGoogleLogin");
+        if (btn) {
+          btn.addEventListener("click", ejecutarLoginMovilNativo);
+        }
 
         return;
       }
 
-      mostrarAviso(
-        "Acceso correcto..."
-      );
+      if (window.google) {
+        google.accounts.id.initialize({
+          client_id: CLIENTE_WEB,
+          callback: C
+        });
 
-      window.location.href =
-        construirURLFinal(
-          resp.credential
+        google.accounts.id.renderButton(
+          document.getElementById("buttonDiv"),
+          {
+            theme: "outline",
+            size: "large",
+            width: 290
+          }
         );
+      }
+    }
+
+    globalThis.ejecutarLoginMovilNativo = async function () {
+      try {
+        mostrarAviso("Conectando con Google...");
+
+        const pluginNativo = window.Capacitor?.Plugins?.SocialLogin;
+        if (!pluginNativo) {
+          mostrarAviso("Plugin SocialLogin no encontrado", true);
+          return;
+        }
+
+        await inicializarPluginNativo();
+
+        const respuesta = await pluginNativo.login({
+          provider: "google",
+          options: {}
+        });
+
+        const datos = respuesta?.result || respuesta || {};
+
+        const token =
+          datos.idToken ||
+          datos.accessToken ||
+          datos?.authentication?.idToken ||
+          datos?.authentication?.accessToken;
+
+        if (!token) {
+          mostrarAviso("Login correcto pero sin token", true);
+          return;
+        }
+
+        mostrarAviso("Validando credenciales...");
+        const urlFinal = construirURLFinal(token);
+        window.location.href = urlFinal;
+
+      } catch (error) {
+        mostrarAviso(
+          "ERROR: " + (error?.message || String(error)),
+          true
+        );
+      }
     };
 
-    async function inicializar() {
-
-  const esNativo =
-    Capacitor.isNativePlatform();
-
-  if (esNativo) {
-
-    mostrarAviso(
-      "Modo Android detectado"
-    );
-
-    const buttonDiv =
-      document.getElementById(
-        "buttonDiv"
-      );
-
-    buttonDiv.innerHTML = `
-      <button
-        id="btnGoogleLogin"
-        style="
-          width:290px;
-          height:42px;
-          border:none;
-          border-radius:4px;
-          background:#1a73e8;
-          color:white;
-          cursor:pointer;
-          font-weight:600;">
-        Iniciar sesión con Google
-      </button>
-    `;
-
-    const btn =
-      document.getElementById(
-        "btnGoogleLogin"
-      );
-
-    if (btn) {
-
-      btn.addEventListener(
-        "click",
-        ejecutarLoginMovilNativo
-      );
-
-    }
-
-    return;
-  }
-
-  if (window.google) {
-
-    google.accounts.id.initialize({
-      client_id: CLIENTE_WEB,
-      callback: C
-    });
-
-    google.accounts.id.renderButton(
-      document.getElementById(
-        "buttonDiv"
-      ),
-      {
-        theme: "outline",
-        size: "large",
-        width: 290
-      }
-    );
-
-  }
-
-}
-
-globalThis.ejecutarLoginMovilNativo = async function () {
-
-  try {
-
-    mostrarAviso(
-      "Iniciando Google..."
-    );
-
-    const pluginNativo =
-      window.Capacitor?.Plugins?.SocialLogin;
-
-    if (!pluginNativo) {
-
-      mostrarAviso(
-        "Plugin SocialLogin no encontrado",
-        true
-      );
-
-      return;
-    }
-
-    mostrarAviso(
-      "Plugin encontrado"
-    );
-
-    const respuesta =
-      await pluginNativo.login({
-        provider: "google"
-      });
-
-    const datos =
-      respuesta?.result ||
-      respuesta ||
-      {};
-
-    const token =
-      datos.idToken ||
-      datos.accessToken ||
-      datos?.authentication?.idToken ||
-      datos?.authentication?.accessToken;
-
-    if (!token) {
-
-      mostrarAviso(
-        "Login correcto pero sin token",
-        true
-      );
-
-      console.log(
-        JSON.stringify(
-          datos,
-          null,
-          2
-        )
-      );
-
-      return;
-    }
-
-    mostrarAviso(
-      "Token recibido"
-    );
-
-    const urlFinal =
-      construirURLFinal(
-        token
-      );
-
-    mostrarAviso(
-      "Redirigiendo..."
-    );
-
-    window.location.href =
-      urlFinal;
-
-  }
-  catch (error) {
-
-    console.error(error);
-
-    mostrarAviso(
-      "ERROR: " +
-      (
-        error?.message ||
-        String(error)
-      ),
-      true
-    );
-
-  }
-
-};
-
-    window.addEventListener(
-      "load",
-      inicializar
-    );
+    window.addEventListener("load", inicializar);
 
   </script>
 
