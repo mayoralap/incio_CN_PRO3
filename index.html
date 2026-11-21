@@ -195,6 +195,11 @@ async function inicializar(){
   const esNativo =
     Capacitor.isNativePlatform();
 
+  console.log(
+    "Capacitor.isNativePlatform:",
+    esNativo
+  );
+
   if(esNativo){
 
     mostrarAviso(
@@ -203,7 +208,7 @@ async function inicializar(){
 
     document.getElementById(
       "buttonDiv"
-    ).innerHTML=
+    ).innerHTML =
     `
     <button
       id="btnGoogleLogin"
@@ -221,16 +226,95 @@ async function inicializar(){
     `;
 
     document
-      .getElementById(
-        "btnGoogleLogin"
-      )
+      .getElementById("btnGoogleLogin")
       .addEventListener(
         "click",
-        () => {
+        async () => {
 
-          mostrarAviso(
-            "Aquí conectarás el plugin Android usando CLIENTE_ANDROID"
-          );
+          try {
+
+            mostrarAviso(
+              "PASO 1 - Click recibido"
+            );
+
+            const deviceId =
+              obtenerOGenerarDeviceId();
+
+            mostrarAviso(
+              "PASO 2 - DeviceId OK"
+            );
+
+            console.log(
+              "deviceId:",
+              deviceId
+            );
+
+            const huellaDigital =
+              generarHuellaDigitalNativa();
+
+            mostrarAviso(
+              "PASO 3 - Huella OK"
+            );
+
+            console.log(
+              "huella:",
+              huellaDigital
+            );
+
+            const devName =
+              navigator.userAgent;
+
+            mostrarAviso(
+              "PASO 4 - Generando URL"
+            );
+
+            console.log(
+              "devName:",
+              devName
+            );
+
+            const urlFinal =
+              URL_APPS_SCRIPT +
+              "?debug=1" +
+              "&deviceId=" +
+              encodeURIComponent(deviceId) +
+              "&devName=" +
+              encodeURIComponent(devName) +
+              "&huellaDigital=" +
+              encodeURIComponent(huellaDigital);
+
+            mostrarAviso(
+              "PASO 5 - URL creada"
+            );
+
+            console.log(
+              "urlFinal:",
+              urlFinal
+            );
+
+            mostrarAviso(
+              "PASO 6 - Navegando..."
+            );
+
+            setTimeout(() => {
+
+              window.location.href =
+                urlFinal;
+
+            }, 1000);
+
+          }
+          catch(error){
+
+            console.error(error);
+
+            mostrarAviso(
+              "ERROR: " +
+              (error.message || error),
+              true
+            );
+
+          }
 
         }
       );
@@ -248,16 +332,25 @@ async function inicializar(){
     google.accounts.id.renderButton(
       document.getElementById("buttonDiv"),
       {
-        theme:"outline",
-        size:"large",
-        width:290
+        theme: "outline",
+        size: "large",
+        width: 290
       }
     );
 
     mostrarAviso(
       "Login Web preparado"
     );
+
+  } else {
+
+    mostrarAviso(
+      "Google GIS no cargó",
+      true
+    );
+
   }
+
 }
 
 window.addEventListener(
