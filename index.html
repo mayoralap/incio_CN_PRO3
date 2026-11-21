@@ -279,13 +279,109 @@
           "&huellaDigital=" + encodeURIComponent(huellaDigital);
       }
 
-      window.ejecutarLoginMovilNativo = async function () {
+      globalThis.ejecutarLoginMovilNativo = async function () {
 
-  mostrarAviso(
-    "CLICK DETECTADO"
-  );
+        mostrarAviso( "CLICK DETECTADO");
 
-};
+        try {
+
+          const pluginNativo =
+            window.Capacitor?.Plugins?.SocialLogin;
+
+          mostrarAviso(
+            "PLUGIN NATIVO ENCONTRADO"
+          );
+
+          const metodos = Object.keys(pluginNativo || {});
+
+          mostrarAviso(
+            metodos.join(", ")
+          );
+
+          return;
+
+        } catch (err) {
+
+          mostrarAviso(
+            "ERROR: " +
+            (err?.message || String(err)),
+            true
+          );
+
+        }
+
+      };
+
+      async function inicializarGIS() {
+
+  try {
+
+    const esNativo =
+      Capacitor.isNativePlatform();
+
+    if (esNativo) {
+
+      mostrarAviso(
+        "Modo App Nativa detectado."
+      );
+
+      const buttonDiv =
+        document.getElementById("buttonDiv");
+
+      if (buttonDiv) {
+
+        buttonDiv.innerHTML = `
+        <button
+          id="btnGoogleLogin"
+          style="
+            width:290px;
+            height:42px;
+            background:#1a73e8;
+            color:white;
+            border:none;
+            border-radius:4px;
+            font-weight:600;
+            cursor:pointer;
+          ">
+          Iniciar sesión con Google
+        </button>`;
+
+        const btn =
+          document.getElementById(
+            "btnGoogleLogin"
+          );
+
+        if (btn) {
+
+          btn.addEventListener(
+            "click",
+            function () {
+
+              mostrarAviso(
+                "CLICK DETECTADO"
+              );
+
+            }
+          );
+
+        }
+
+      }
+
+      return;
+    }
+
+  } catch (err) {
+
+    mostrarAviso(
+      err?.message ||
+      String(err),
+      true
+    );
+
+  }
+
+}
 
     window.lanzarLoginExterno = function () {
       const urlDestino = "https://mayoralap.github.io/incio_CN_PRO3/";
