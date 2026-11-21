@@ -190,7 +190,7 @@ window.C = function(resp){
     );
 };
 
-async function inicializar(){
+async function inicializar() {
 
   const esNativo =
     Capacitor.isNativePlatform();
@@ -200,7 +200,7 @@ async function inicializar(){
     esNativo
   );
 
-  if(esNativo){
+  if (esNativo) {
 
     mostrarAviso(
       "Modo Android detectado"
@@ -208,21 +208,20 @@ async function inicializar(){
 
     document.getElementById(
       "buttonDiv"
-    ).innerHTML =
-    `
-    <button
-      id="btnGoogleLogin"
-      style="
-        width:290px;
-        height:42px;
-        border:none;
-        border-radius:4px;
-        background:#1a73e8;
-        color:white;
-        cursor:pointer;
-        font-weight:600;">
-      Iniciar sesión con Google
-    </button>
+    ).innerHTML = `
+      <button
+        id="btnGoogleLogin"
+        style="
+          width:290px;
+          height:42px;
+          border:none;
+          border-radius:4px;
+          background:#1a73e8;
+          color:white;
+          cursor:pointer;
+          font-weight:600;">
+          Iniciar sesión con Google
+      </button>
     `;
 
     document
@@ -234,83 +233,52 @@ async function inicializar(){
           try {
 
             mostrarAviso(
-              "PASO 1 - Click recibido"
+              "Autenticando..."
             );
 
-            const deviceId =
-              obtenerOGenerarDeviceId();
+            // AQUÍ VA TU PLUGIN
+            const resultado =
+              await ejecutarLoginMovilNativo();
+
+            const token =
+              resultado.idToken ||
+              resultado.credential ||
+              resultado.token;
+
+            if (!token) {
+
+              mostrarAviso(
+                "No se recibió token",
+                true
+              );
+
+              return;
+            }
 
             mostrarAviso(
-              "PASO 2 - DeviceId OK"
-            );
-
-            console.log(
-              "deviceId:",
-              deviceId
-            );
-
-            const huellaDigital =
-              generarHuellaDigitalNativa();
-
-            mostrarAviso(
-              "PASO 3 - Huella OK"
-            );
-
-            console.log(
-              "huella:",
-              huellaDigital
-            );
-
-            const devName =
-              navigator.userAgent;
-
-            mostrarAviso(
-              "PASO 4 - Generando URL"
-            );
-
-            console.log(
-              "devName:",
-              devName
+              "Token recibido"
             );
 
             const urlFinal =
-              URL_APPS_SCRIPT +
-              "?debug=1" +
-              "&deviceId=" +
-              encodeURIComponent(deviceId) +
-              "&devName=" +
-              encodeURIComponent(devName) +
-              "&huellaDigital=" +
-              encodeURIComponent(huellaDigital);
-
-            mostrarAviso(
-              "PASO 5 - URL creada"
-            );
+              construirURLFinal(
+                token
+              );
 
             console.log(
-              "urlFinal:",
               urlFinal
             );
 
-            mostrarAviso(
-              "PASO 6 - Navegando..."
-            );
-
-            setTimeout(() => {
-
-              window.location.href =
-                urlFinal;
-
-            }, 1000);
+            window.location.href =
+              urlFinal;
 
           }
-          catch(error){
+          catch (error) {
 
             console.error(error);
 
             mostrarAviso(
-              "ERROR: " +
-              (error.message || error),
+              error.message ||
+              "Error de autenticación",
               true
             );
 
@@ -322,7 +290,7 @@ async function inicializar(){
     return;
   }
 
-  if(window.google){
+  if (window.google) {
 
     google.accounts.id.initialize({
       client_id: CLIENTE_WEB,
