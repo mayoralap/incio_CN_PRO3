@@ -215,24 +215,20 @@
       window.location.href = construirURLFinal(r.credential);
     };
 
-    async function inicializarGIS() {
-      try {
-        const esNativo = Capacitor.isNativePlatform();
+    if (esNativo) {
 
-        if (esNativo) {
+  mostrarAviso(
+    "Modo App Nativa detectado."
+  );
 
-          mostrarAviso(
-            "Modo App Nativa detectado."
-          );
+  const buttonDiv =
+    document.getElementById("buttonDiv");
 
-          const buttonDiv =
-            document.getElementById("buttonDiv");
+  if (buttonDiv) {
 
-          if (buttonDiv) {
-
-            buttonDiv.innerHTML = `
+    buttonDiv.innerHTML = `
       <button
-        onclick="ejecutarLoginMovilNativo()"
+        id="btnGoogleLogin"
         style="
           width:290px;
           height:42px;
@@ -245,48 +241,29 @@
         ">
         Iniciar sesión con Google
       </button>`;
-          }
 
-          return;
+    const btn =
+      document.getElementById("btnGoogleLogin");
+
+    if (btn) {
+
+      btn.addEventListener(
+        "click",
+        function () {
+
+          mostrarAviso(
+            "CLICK DETECTADO"
+          );
+
         }
+      );
 
-        const ua = navigator.userAgent;
-        const isNativeAppUserAgent = ua.includes("ColumbaAppNative");
-
-        if (isNativeAppUserAgent) {
-          const buttonDiv = document.getElementById("buttonDiv");
-          if (buttonDiv) {
-            buttonDiv.innerHTML = `
-            <button onclick="lanzarLoginExterno()" style="width: 290px; height: 42px; background: #1a73e8; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-              Iniciar sesión con Google (Navegador)
-            </button>`;
-          }
-          return;
-        }
-
-        if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
-          setTimeout(inicializarGIS, 200);
-          return;
-        }
-
-        google.accounts.id.initialize({
-          client_id: CLIENTE_WEB,
-          callback: window.C,
-          context: "signin",
-          ux_mode: "popup",
-          auto_select: false,
-          use_fedcm_for_prompt: false
-        });
-
-        google.accounts.id.renderButton(
-          document.getElementById("buttonDiv"),
-          { theme: "outline", size: "large", text: "signin_with", shape: "rectangular", width: "290" }
-        );
-
-      } catch (err) {
-        mostrarAviso("Error al inicializar el inicio de sesión.", true);
-      }
     }
+
+  }
+
+  return;
+}
 
     function construirURLFinal(token) {
         const deviceId = obtenerOGenerarDeviceId();
@@ -302,38 +279,13 @@
           "&huellaDigital=" + encodeURIComponent(huellaDigital);
       }
 
-      globalThis.ejecutarLoginMovilNativo = async function () {
+      window.ejecutarLoginMovilNativo = async function () {
 
-        mostrarAviso( "CLICK DETECTADO");
+  mostrarAviso(
+    "CLICK DETECTADO"
+  );
 
-        try {
-
-          const pluginNativo =
-            window.Capacitor?.Plugins?.SocialLogin;
-
-          mostrarAviso(
-            "PLUGIN NATIVO ENCONTRADO"
-          );
-
-          const metodos = Object.keys(pluginNativo || {});
-
-          mostrarAviso(
-            metodos.join(", ")
-          );
-
-          return;
-
-        } catch (err) {
-
-          mostrarAviso(
-            "ERROR: " +
-            (err?.message || String(err)),
-            true
-          );
-
-        }
-
-      };
+};
 
     window.lanzarLoginExterno = function () {
       const urlDestino = "https://mayoralap.github.io/incio_CN_PRO3/";
