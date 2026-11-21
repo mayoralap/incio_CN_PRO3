@@ -54,6 +54,7 @@
     #mensaje {
       margin-top: 15px;
       font-weight: 600;
+      word-break: break-word;
     }
   </style>
 </head>
@@ -86,9 +87,6 @@
 
     const CLIENTE_WEB =
       "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
-
-    const CLIENTE_ANDROID =
-      "839165918275-9e3pbpo84he4ti6m038ldbg21cj37fdr.apps.googleusercontent.com";
 
     const URL_APPS_SCRIPT =
       "https://script.google.com/macros/s/AKfycby4ov5QtHYZUiw3CCXqpyxD8tU3LAiBSuZeKmTDcnY_FpTX_k946XlkJgEGoJTNsdOMLg/exec";
@@ -164,7 +162,7 @@
 
     function renderizarBotonWeb(clienteId = CLIENTE_WEB) {
       const buttonDiv = document.getElementById("buttonDiv");
-      if (!buttonDiv) return;
+      if (!buttonDiv) return false;
 
       if (window.google?.accounts?.id) {
         google.accounts.id.initialize({
@@ -193,7 +191,7 @@
 
       await pluginNativo.initialize({
         google: {
-          webClientId: CLIENTE_ANDROID
+          webClientId: CLIENTE_WEB
         }
       });
       socialLoginInicializado = true;
@@ -208,11 +206,8 @@
         const pluginNativo = obtenerPluginSocialLogin();
 
         if (!pluginListo || !pluginNativo?.login) {
-          mostrarAviso("Usando acceso web en la app...");
-          const listoWeb = renderizarBotonWeb(CLIENTE_WEB);
-          if (!listoWeb) {
-            mostrarAviso("Google GIS no cargó aún", true);
-          }
+          mostrarAviso("Sin plugin nativo; usando acceso web...");
+          renderizarBotonWeb(CLIENTE_WEB);
           return;
         }
 
@@ -230,7 +225,7 @@
           datos?.authentication?.accessToken;
 
         if (!token) {
-          mostrarAviso("Sin token nativo, pasando a acceso web...");
+          mostrarAviso("Sin token nativo; usando acceso web...");
           renderizarBotonWeb(CLIENTE_WEB);
           return;
         }
@@ -239,14 +234,9 @@
         window.location.href = construirURLFinal(token);
 
       } catch (error) {
-        mostrarAviso("Respaldo web activado...");
-        const listoWeb = renderizarBotonWeb(CLIENTE_WEB);
-        if (!listoWeb) {
-          mostrarAviso(
-            "ERROR: " + (error?.message || String(error)),
-            true
-          );
-        }
+        const detalle = error?.message || String(error);
+        mostrarAviso("Nativo: " + detalle + " — mostrando acceso web...", true);
+        renderizarBotonWeb(CLIENTE_WEB);
       }
     };
 
