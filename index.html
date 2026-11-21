@@ -112,7 +112,7 @@
 
   <script type="module">
     import { Capacitor } from 'https://cdn.jsdelivr.net/npm/@capacitor/core@8.6.0/+esm';
-  
+    alert("SCRIPT CARGADO");
 
     const CLIENTE_WEB = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
     const CLIENTE_ANDROID = "839165918275-9e3pbpo84he4ti6m038ldbg21cj37fdr.apps.googleusercontent.com";
@@ -289,22 +289,49 @@
     }
 
     function construirURLFinal(token) {
-      const deviceId = obtenerOGenerarDeviceId();
-      const huellaDigital = generarHuellaDigitalNativa();
-      const devName = obtenerNombreAmigable();
+        const deviceId = obtenerOGenerarDeviceId();
+        const huellaDigital = generarHuellaDigitalNativa();
+        const devName = obtenerNombreAmigable();
 
-      localStorage.setItem('cn_device_name', devName);
+        localStorage.setItem('cn_device_name', devName);
 
-      return URL_APPS_SCRIPT +
-        "?token=" + encodeURIComponent(token) +
-        "&deviceId=" + encodeURIComponent(deviceId) +
-        "&devName=" + encodeURIComponent(devName) +
-        "&huellaDigital=" + encodeURIComponent(huellaDigital);
-    }
+        return URL_APPS_SCRIPT +
+          "?token=" + encodeURIComponent(token) +
+          "&deviceId=" + encodeURIComponent(deviceId) +
+          "&devName=" + encodeURIComponent(devName) +
+          "&huellaDigital=" + encodeURIComponent(huellaDigital);
+      }
 
-    window.ejecutarLoginMovilNativo = function () {
-      alert("CLICK OK");
-    };
+      window.ejecutarLoginMovilNativo = async function () {
+
+        try {
+
+          const pluginNativo =
+            window.Capacitor?.Plugins?.SocialLogin;
+
+          mostrarAviso(
+            "PLUGIN NATIVO ENCONTRADO"
+          );
+
+          const metodos = Object.keys(pluginNativo || {});
+
+          mostrarAviso(
+            metodos.join(", ")
+          );
+
+          return;
+
+        } catch (err) {
+
+          mostrarAviso(
+            "ERROR: " +
+            (err?.message || String(err)),
+            true
+          );
+
+        }
+
+      };
 
     window.lanzarLoginExterno = function () {
       const urlDestino = "https://mayoralap.github.io/incio_CN_PRO3/";
@@ -318,5 +345,9 @@
 
     window.addEventListener('load', () => {
       setTimeout(inicializarGIS, 300);
-    
+    });
+  </script>
+
+</body>
+
 </html>
