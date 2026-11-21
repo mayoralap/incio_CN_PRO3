@@ -260,35 +260,75 @@
 
 }
 
-globalThis.ejecutarLoginMovilNativo =
-  async function () {
+globalThis.ejecutarLoginMovilNativo = async function () {
 
-    try {
+  try {
 
-      const plugins =
+    mostrarAviso(
+      "Iniciando Google..."
+    );
+
+    mostrarAviso(
+      "Plugins: " +
+      JSON.stringify(
         Object.keys(
           window.Capacitor?.Plugins || {}
-        );
+        )
+      )
+    );
+
+    console.log(
+      "window.Capacitor",
+      window.Capacitor
+    );
+
+    console.log(
+      "window.Capacitor.Plugins",
+      window.Capacitor?.Plugins
+    );
+
+    const plugin =
+      window.Capacitor?.Plugins?.SocialLogin;
+
+    console.log(
+      "PLUGIN:",
+      plugin
+    );
+
+    if (!plugin) {
 
       mostrarAviso(
-        plugins.join(" | ")
-      );
-
-      console.log(
-        "PLUGINS:",
-        plugins
-      );
-
-    } catch (error) {
-
-      mostrarAviso(
-        String(error),
+        "SocialLogin NO registrado",
         true
       );
 
+      return;
     }
 
-  };
+    const respuesta =
+      await plugin.login({
+        provider: "google"
+      });
+
+    console.log(
+      "LOGIN:",
+      respuesta
+    );
+
+  }
+  catch (e) {
+
+    console.error(e);
+
+    mostrarAviso(
+      e?.message ||
+      String(e),
+      true
+    );
+
+  }
+
+};
 
     window.addEventListener(
       "load",
