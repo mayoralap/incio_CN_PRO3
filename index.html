@@ -112,7 +112,7 @@
 
   <script type="module">
     import { Capacitor } from 'https://cdn.jsdelivr.net/npm/@capacitor/core@8.6.0/+esm';
-    alert("SCRIPT CARGADO");
+    mostrarAviso("SCRIPT CARGADO");
 
     const CLIENTE_WEB = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
     const CLIENTE_ANDROID = "839165918275-9e3pbpo84he4ti6m038ldbg21cj37fdr.apps.googleusercontent.com";
@@ -215,122 +215,49 @@
       window.location.href = construirURLFinal(r.credential);
     };
 
-    if (esNativo) {
+    function construirURLFinal(token) {
+      const deviceId = obtenerOGenerarDeviceId();
+      const huellaDigital = generarHuellaDigitalNativa();
+      const devName = obtenerNombreAmigable();
 
-  mostrarAviso(
-    "Modo App Nativa detectado."
-  );
+      localStorage.setItem('cn_device_name', devName);
 
-  const buttonDiv =
-    document.getElementById("buttonDiv");
-
-  if (buttonDiv) {
-
-    buttonDiv.innerHTML = `
-      <button
-        id="btnGoogleLogin"
-        style="
-          width:290px;
-          height:42px;
-          background:#1a73e8;
-          color:white;
-          border:none;
-          border-radius:4px;
-          font-weight:600;
-          cursor:pointer;
-        ">
-        Iniciar sesión con Google
-      </button>`;
-
-    const btn =
-      document.getElementById("btnGoogleLogin");
-
-    if (btn) {
-
-      btn.addEventListener(
-        "click",
-        function () {
-
-          mostrarAviso(
-            "CLICK DETECTADO"
-          );
-
-        }
-      );
-
+      return URL_APPS_SCRIPT +
+        "?token=" + encodeURIComponent(token) +
+        "&deviceId=" + encodeURIComponent(deviceId) +
+        "&devName=" + encodeURIComponent(devName) +
+        "&huellaDigital=" + encodeURIComponent(huellaDigital);
     }
 
-  }
+    globalThis.ejecutarLoginMovilNativo =
+      async function () {
 
-  return;
-}
-
-    function construirURLFinal(token) {
-        const deviceId = obtenerOGenerarDeviceId();
-        const huellaDigital = generarHuellaDigitalNativa();
-        const devName = obtenerNombreAmigable();
-
-        localStorage.setItem('cn_device_name', devName);
-
-        return URL_APPS_SCRIPT +
-          "?token=" + encodeURIComponent(token) +
-          "&deviceId=" + encodeURIComponent(deviceId) +
-          "&devName=" + encodeURIComponent(devName) +
-          "&huellaDigital=" + encodeURIComponent(huellaDigital);
-      }
-
-      globalThis.ejecutarLoginMovilNativo = async function () {
-
-        mostrarAviso( "CLICK DETECTADO");
-
-        try {
-
-          const pluginNativo =
-            window.Capacitor?.Plugins?.SocialLogin;
-
-          mostrarAviso(
-            "PLUGIN NATIVO ENCONTRADO"
-          );
-
-          const metodos = Object.keys(pluginNativo || {});
-
-          mostrarAviso(
-            metodos.join(", ")
-          );
-
-          return;
-
-        } catch (err) {
-
-          mostrarAviso(
-            "ERROR: " +
-            (err?.message || String(err)),
-            true
-          );
-
-        }
+        mostrarAviso(
+          "CLICK DETECTADO"
+        );
 
       };
 
-      async function inicializarGIS() {
 
-  try {
+    async function inicializarGIS() {
 
-    const esNativo =
-      Capacitor.isNativePlatform();
+      try {
 
-    if (esNativo) {
+        const esNativo =
+          Capacitor.isNativePlatform();
 
-      mostrarAviso(
-        "Modo App Nativa detectado."
-      );
+        if (esNativo) {
 
-      const buttonDiv =
-        document.getElementById("buttonDiv");
+          mostrarAviso(
+            "Modo App Nativa detectado."
+          );
 
-      if (buttonDiv) {
+          const buttonDiv =
+            document.getElementById("buttonDiv");
 
-        buttonDiv.innerHTML = `
+          if (buttonDiv) {
+
+            buttonDiv.innerHTML = `
         <button
           id="btnGoogleLogin"
           style="
@@ -346,42 +273,42 @@
           Iniciar sesión con Google
         </button>`;
 
-        const btn =
-          document.getElementById(
-            "btnGoogleLogin"
-          );
+            const btn =
+              document.getElementById(
+                "btnGoogleLogin"
+              );
 
-        if (btn) {
+            if (btn) {
 
-          btn.addEventListener(
-            "click",
-            function () {
+              btn.addEventListener(
+                "click",
+                function () {
 
-              mostrarAviso(
-                "CLICK DETECTADO"
+                  mostrarAviso(
+                    "CLICK DETECTADO"
+                  );
+
+                }
               );
 
             }
-          );
 
+          }
+
+          return;
         }
+
+      } catch (err) {
+
+        mostrarAviso(
+          err?.message ||
+          String(err),
+          true
+        );
 
       }
 
-      return;
     }
-
-  } catch (err) {
-
-    mostrarAviso(
-      err?.message ||
-      String(err),
-      true
-    );
-
-  }
-
-}
 
     window.lanzarLoginExterno = function () {
       const urlDestino = "https://mayoralap.github.io/incio_CN_PRO3/";
