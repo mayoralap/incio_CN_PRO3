@@ -1,330 +1,271 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Columba Notebook – Verificación de Identidad</title>
-  <!-- SDK Web de Google (funciona perfecto en tu GitHub Pages para PC) -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <style>
-    :root {
-      --color-primary: #1a73e8;
-      --color-primary-hover: #1557b0;
-      --color-success: #28a745;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    body {
-      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background: #f5f7fb;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding-top: 6vh;
-      min-height: 100vh;
-    }
+<title>Columba Notebook – Verificación de Identidad</title>
 
-    .main-card {
-      background: #ffffff;
-      border-radius: 12px;
-      border: 1px solid #dadce0;
-      padding: 40px 32px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-      width: 100%;
-      max-width: 440px;
-      text-align: center;
-      box-sizing: border-box;
-      margin: 20px;
-    }
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 
-    .logo-img {
-      width: 120px;
-      height: auto;
-      margin-bottom: 24px;
-      object-fit: contain;
-    }
+<style>
+:root{
+  --color-primary:#1a73e8;
+  --color-error:#d32f2f;
+}
 
-    h2 {
-      font-size: 1.5rem;
-      color: #202124;
-      margin: 0 0 10px 0;
-      font-weight: 600;
-    }
+body{
+  font-family:'Segoe UI',Arial,sans-serif;
+  background:#f5f7fb;
+  margin:0;
+  padding:20px;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+}
 
-    p {
-      color: #5f6368;
-      margin: 0 0 28px 0;
-      font-size: 0.95rem;
-      line-height: 1.5;
-    }
+.main-card{
+  width:100%;
+  max-width:440px;
+  background:#fff;
+  border:1px solid #dadce0;
+  border-radius:12px;
+  padding:32px;
+  text-align:center;
+  box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
 
-    #buttonDiv {
-      display: flex;
-      justify-content: center;
-      width: 100%;
-      margin-bottom: 10px;
-    }
+.logo-img{
+  width:120px;
+  margin-bottom:20px;
+}
 
-    #mensaje {
-      margin-top: 16px;
-      font-weight: 500;
-      font-size: 0.95rem;
-    }
+#buttonDiv{
+  margin-top:20px;
+  display:flex;
+  justify-content:center;
+}
 
-    .btn-fallback {
-      width: 100%;
-      max-width: 290px;
-      height: 42px;
-      background: #1a73e8;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 0.95rem;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    @media (max-width: 480px) {
-      .main-card {
-        padding: 24px 20px;
-        margin: 16px;
-      }
-    }
-  </style>
+#mensaje{
+  margin-top:15px;
+  font-weight:600;
+}
+</style>
 </head>
 
 <body>
 
-  <div class="main-card">
-    <img src="https://drive.google.com/thumbnail?id=15hTMpm_5aNuU2QKTWZGdK2XKdtpEog4w" alt="Logo Columba Notebook"
-      class="logo-img">
-    <h2>Verificación de Identidad</h2>
-    <p>Para verificar el estado de tu cuenta y mostrarte las opciones correspondientes, inicia sesión con Google.</p>
+<div class="main-card">
 
-    <div id="buttonDiv"></div>
-    <div id="mensaje"></div>
-  </div>
+<img
+  src="https://drive.google.com/thumbnail?id=15hTMpm_5aNuU2QKTWZGdK2XKdtpEog4w"
+  class="logo-img"
+  alt="Columba Notebook">
 
-  <script type="module">
-    import { Capacitor } from 'https://cdn.jsdelivr.net/npm/@capacitor/core@8.6.0/+esm';
-    mostrarAviso("SCRIPT CARGADO");
+<h2>Verificación de Identidad</h2>
 
-    const CLIENTE_WEB = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
-    const CLIENTE_ANDROID = "839165918275-9e3pbpo84he4ti6m038ldbg21cj37fdr.apps.googleusercontent.com";
-    const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycby4ov5QtHYZUiw3CCXqpyxD8tU3LAiBSuZeKmTDcnY_FpTX_k946XlkJgEGoJTNsdOMLg/exec";
+<p>
+Para verificar el estado de tu cuenta inicia sesión con Google.
+</p>
 
-    function mostrarAviso(texto, esError = false) {
-      const m = document.getElementById('mensaje');
-      if (m) {
-        m.style.color = esError ? "#d32f2f" : "var(--color-primary)";
-        m.innerText = texto;
-      }
-    }
+<div id="buttonDiv"></div>
 
-    function generarHuellaDigitalNativa() {
-      const nav = window.navigator;
-      const scr = window.screen;
-      const rawString = [
-        nav.userAgent,
-        nav.language,
-        scr.colorDepth,
-        scr.width + 'x' + scr.height,
-        new Date().getTimezoneOffset(),
-        nav.hardwareConcurrency || 'unknown'
-      ].join('|');
+<div id="mensaje"></div>
 
-      let hash = 0;
-      for (let i = 0; i < rawString.length; i++) {
-        const char = rawString.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash |= 0;
-      }
-      return 'FP-' + Math.abs(hash).toString(36).toUpperCase();
-    }
+</div>
 
-    function obtenerNombreAmigable() {
-      const ua = navigator.userAgent;
-      const uaLower = ua.toLowerCase();
+<script type="module">
 
-      let navegador = "ND";
-      if (uaLower.includes("edg/")) {
-        navegador = "ED";
-      } else if (uaLower.includes("opr/") || uaLower.includes("opera")) {
-        navegador = "OP";
-      } else if (uaLower.includes("samsungbrowser/")) {
-        navegador = "SB";
-      } else if (uaLower.includes("chrome/")) {
-        navegador = "CH";
-      } else if (uaLower.includes("safari/") && !uaLower.includes("chrome")) {
-        navegador = "SF";
-      } else if (uaLower.includes("firefox/")) {
-        navegador = "FF";
-      }
+import { Capacitor }
+from 'https://cdn.jsdelivr.net/npm/@capacitor/core/+esm';
 
-      if (uaLower.includes("android")) {
-        const esTablet = uaLower.includes("tablet") || (Math.min(window.screen.width, window.screen.height) >= 600 && !uaLower.includes("mobile"));
-        return esTablet ? `Android Tablet (${navegador})` : `Android Celular (${navegador})`;
-      }
-      if (uaLower.includes("iphone") || uaLower.includes("ipod")) {
-        return `iPhone (${navegador})`;
-      }
-      if (uaLower.includes("ipad")) {
-        return `iPad (${navegador})`;
-      }
-      if (uaLower.includes("windows")) {
-        return `Windows (${navegador})`;
-      }
-      if (uaLower.includes("mac os") || uaLower.includes("macintosh")) {
-        return `MacOS (${navegador})`;
-      }
-      if (uaLower.includes("linux")) {
-        return `Linux (${navegador})`;
-      }
+const CLIENTE_WEB =
+"498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
 
-      return `Navegador Web (${navegador})`;
-    }
+const CLIENTE_ANDROID =
+"839165918275-9e3pbpo84he4ti6m038ldbg21cj37fdr.apps.googleusercontent.com";
 
-    function obtenerOGenerarDeviceId() {
-      let deviceId = (typeof window.SERVER_DEVICE_ID !== 'undefined' && window.SERVER_DEVICE_ID) ? window.SERVER_DEVICE_ID : null;
+const URL_APPS_SCRIPT =
+"https://script.google.com/macros/s/AKfycby4ov5QtHYZUiw3CCXqpyxD8tU3LAiBSuZeKmTDcnY_FpTX_k946XlkJgEGoJTNsdOMLg/exec";
 
-      if (!deviceId) {
-        deviceId = localStorage.getItem('cn_device_id');
-      }
+function mostrarAviso(texto,error=false){
 
-      if (!deviceId) {
-        deviceId = 'DEV-' + Math.random().toString(36).substring(2, 9).toUpperCase() + '-' + Date.now();
-      }
+  const m=document.getElementById("mensaje");
 
-      localStorage.setItem('cn_device_id', deviceId);
-      return deviceId;
-    }
+  m.style.color=
+    error
+      ? "#d32f2f"
+      : "#1a73e8";
 
-    window.C = function (r) {
-      mostrarAviso("Validando credenciales y dispositivo...");
+  m.textContent=texto;
+}
 
-      if (!r || !r.credential) {
-        mostrarAviso("Error: No se recibió una credencial válida.", true);
-        return;
-      }
+function generarHuellaDigitalNativa(){
 
-      window.location.href = construirURLFinal(r.credential);
-    };
+  const raw=[
+    navigator.userAgent,
+    navigator.language,
+    screen.width,
+    screen.height,
+    screen.colorDepth
+  ].join("|");
 
-    function construirURLFinal(token) {
-      const deviceId = obtenerOGenerarDeviceId();
-      const huellaDigital = generarHuellaDigitalNativa();
-      const devName = obtenerNombreAmigable();
+  let hash=0;
 
-      localStorage.setItem('cn_device_name', devName);
+  for(let i=0;i<raw.length;i++){
+    hash=((hash<<5)-hash)+raw.charCodeAt(i);
+    hash|=0;
+  }
 
-      return URL_APPS_SCRIPT +
-        "?token=" + encodeURIComponent(token) +
-        "&deviceId=" + encodeURIComponent(deviceId) +
-        "&devName=" + encodeURIComponent(devName) +
-        "&huellaDigital=" + encodeURIComponent(huellaDigital);
-    }
+  return "FP-"+Math.abs(hash).toString(36).toUpperCase();
+}
 
-    globalThis.ejecutarLoginMovilNativo =
-      async function () {
+function obtenerOGenerarDeviceId(){
 
-        mostrarAviso(
-          "CLICK DETECTADO"
-        );
+  let id=
+    localStorage.getItem("cn_device_id");
 
-      };
+  if(!id){
 
+    id=
+      "DEV-"+
+      Math.random()
+      .toString(36)
+      .substring(2,10)
+      .toUpperCase();
 
-    async function inicializarGIS() {
+    localStorage.setItem(
+      "cn_device_id",
+      id
+    );
+  }
 
-      try {
+  return id;
+}
 
-        const esNativo =
-          Capacitor.isNativePlatform();
+function construirURLFinal(token){
 
-        if (esNativo) {
+  const deviceId=
+    obtenerOGenerarDeviceId();
+
+  const huellaDigital=
+    generarHuellaDigitalNativa();
+
+  const devName=
+    navigator.userAgent;
+
+  return (
+    URL_APPS_SCRIPT +
+    "?token=" +
+    encodeURIComponent(token) +
+    "&deviceId=" +
+    encodeURIComponent(deviceId) +
+    "&devName=" +
+    encodeURIComponent(devName) +
+    "&huellaDigital=" +
+    encodeURIComponent(huellaDigital)
+  );
+}
+
+window.C = function(resp){
+
+  if(!resp?.credential){
+
+    mostrarAviso(
+      "No se recibió credencial",
+      true
+    );
+
+    return;
+  }
+
+  mostrarAviso(
+    "Acceso correcto..."
+  );
+
+  window.location.href =
+    construirURLFinal(
+      resp.credential
+    );
+};
+
+async function inicializar(){
+
+  const esNativo =
+    Capacitor.isNativePlatform();
+
+  if(esNativo){
+
+    mostrarAviso(
+      "Modo Android detectado"
+    );
+
+    document.getElementById(
+      "buttonDiv"
+    ).innerHTML=
+    `
+    <button
+      id="btnGoogleLogin"
+      style="
+        width:290px;
+        height:42px;
+        border:none;
+        border-radius:4px;
+        background:#1a73e8;
+        color:white;
+        cursor:pointer;
+        font-weight:600;">
+      Iniciar sesión con Google
+    </button>
+    `;
+
+    document
+      .getElementById(
+        "btnGoogleLogin"
+      )
+      .addEventListener(
+        "click",
+        () => {
 
           mostrarAviso(
-            "Modo App Nativa detectado."
+            "Aquí conectarás el plugin Android usando CLIENTE_ANDROID"
           );
 
-          const buttonDiv =
-            document.getElementById("buttonDiv");
-
-          if (buttonDiv) {
-
-            buttonDiv.innerHTML = `
-        <button
-          id="btnGoogleLogin"
-          style="
-            width:290px;
-            height:42px;
-            background:#1a73e8;
-            color:white;
-            border:none;
-            border-radius:4px;
-            font-weight:600;
-            cursor:pointer;
-          ">
-          Iniciar sesión con Google
-        </button>`;
-
-            const btn =
-              document.getElementById(
-                "btnGoogleLogin"
-              );
-
-            if (btn) {
-
-              btn.addEventListener(
-                "click",
-                function () {
-
-                  mostrarAviso(
-                    "CLICK DETECTADO"
-                  );
-
-                }
-              );
-
-            }
-
-          }
-
-          return;
         }
+      );
 
-      } catch (err) {
+    return;
+  }
 
-        mostrarAviso(
-          err?.message ||
-          String(err),
-          true
-        );
+  if(window.google){
 
-      }
-
-    }
-
-    window.lanzarLoginExterno = function () {
-      const urlDestino = "https://mayoralap.github.io/incio_CN_PRO3/";
-      const ua = navigator.userAgent;
-      if (ua.includes("ColumbaAppNative") || ua.includes("Android")) {
-        window.location.href = "intent://" + urlDestino.replace("https://", "") + "#Intent;scheme=https;package=com.android.chrome;end";
-      } else {
-        window.open(urlDestino, "_blank");
-      }
-    };
-
-    window.addEventListener('load', () => {
-      setTimeout(inicializarGIS, 300);
+    google.accounts.id.initialize({
+      client_id: CLIENTE_WEB,
+      callback: C
     });
-  </script>
+
+    google.accounts.id.renderButton(
+      document.getElementById("buttonDiv"),
+      {
+        theme:"outline",
+        size:"large",
+        width:290
+      }
+    );
+
+    mostrarAviso(
+      "Login Web preparado"
+    );
+  }
+}
+
+window.addEventListener(
+  "load",
+  inicializar
+);
+
+</script>
 
 </body>
-
 </html>
