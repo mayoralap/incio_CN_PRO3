@@ -62,7 +62,7 @@
     <img src="https://drive.google.com/thumbnail?id=15hTMpm_5aNuU2QKTWZGdK2XKdtpEog4w" class="logo-img"
       alt="Columba Notebook">
 
-    <h2>Verificación de Identidad</h2>
+    <h2>Verificación de Identidad v2</h2>
 
     <p>
       Para verificar el estado de tu cuenta inicia sesión con Google.
@@ -268,61 +268,84 @@ globalThis.ejecutarLoginMovilNativo = async function () {
       "Iniciando Google..."
     );
 
-    mostrarAviso(
-      "Plugins: " +
-      JSON.stringify(
-        Object.keys(
-          window.Capacitor?.Plugins || {}
-        )
-      )
-    );
-
-    console.log(
-      "window.Capacitor",
-      window.Capacitor
-    );
-
-    console.log(
-      "window.Capacitor.Plugins",
-      window.Capacitor?.Plugins
-    );
-
-    const plugin =
+    const pluginNativo =
       window.Capacitor?.Plugins?.SocialLogin;
 
-    console.log(
-      "PLUGIN:",
-      plugin
-    );
-
-    if (!plugin) {
+    if (!pluginNativo) {
 
       mostrarAviso(
-        "SocialLogin NO registrado",
+        "Plugin SocialLogin no encontrado",
         true
       );
 
       return;
     }
 
+    mostrarAviso(
+      "Plugin encontrado"
+    );
+
     const respuesta =
-      await plugin.login({
+      await pluginNativo.login({
         provider: "google"
       });
 
-    console.log(
-      "LOGIN:",
-      respuesta
-    );
+    const datos =
+      respuesta?.result ||
+      respuesta ||
+      {};
 
-  }
-  catch (e) {
+    const token =
+      datos.idToken ||
+      datos.accessToken ||
+      datos?.authentication?.idToken ||
+      datos?.authentication?.accessToken;
 
-    console.error(e);
+    if (!token) {
+
+      mostrarAviso(
+        "Login correcto pero sin token",
+        true
+      );
+
+      console.log(
+        JSON.stringify(
+          datos,
+          null,
+          2
+        )
+      );
+
+      return;
+    }
 
     mostrarAviso(
-      e?.message ||
-      String(e),
+      "Token recibido"
+    );
+
+    const urlFinal =
+      construirURLFinal(
+        token
+      );
+
+    mostrarAviso(
+      "Redirigiendo..."
+    );
+
+    window.location.href =
+      urlFinal;
+
+  }
+  catch (error) {
+
+    console.error(error);
+
+    mostrarAviso(
+      "ERROR: " +
+      (
+        error?.message ||
+        String(error)
+      ),
       true
     );
 
