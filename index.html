@@ -236,6 +236,16 @@
                   "PASO 1 - Click recibido"
                 );
 
+                alert(
+                  JSON.stringify(
+                    Object.keys(
+                      window.Capacitor?.Plugins || {}
+                    ),
+                    null,
+                    2
+                  )
+                );
+
                 console.log(
                   "Plugins:",
                   window.Capacitor?.Plugins
