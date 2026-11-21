@@ -1,215 +1,214 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Columba Notebook – Verificación de Identidad</title>
+  <title>Columba Notebook – Verificación de Identidad</title>
 
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-<style>
-:root{
-  --color-primary:#1a73e8;
-  --color-error:#d32f2f;
-}
+  <style>
+    :root {
+      --color-primary: #1a73e8;
+      --color-error: #d32f2f;
+    }
 
-body{
-  font-family:'Segoe UI',Arial,sans-serif;
-  background:#f5f7fb;
-  margin:0;
-  padding:20px;
-  min-height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:flex-start;
-}
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f5f7fb;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
 
-.main-card{
-  width:100%;
-  max-width:440px;
-  background:#fff;
-  border:1px solid #dadce0;
-  border-radius:12px;
-  padding:32px;
-  text-align:center;
-  box-shadow:0 4px 12px rgba(0,0,0,.08);
-}
+    .main-card {
+      width: 100%;
+      max-width: 440px;
+      background: #fff;
+      border: 1px solid #dadce0;
+      border-radius: 12px;
+      padding: 32px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
+    }
 
-.logo-img{
-  width:120px;
-  margin-bottom:20px;
-}
+    .logo-img {
+      width: 120px;
+      margin-bottom: 20px;
+    }
 
-#buttonDiv{
-  margin-top:20px;
-  display:flex;
-  justify-content:center;
-}
+    #buttonDiv {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+    }
 
-#mensaje{
-  margin-top:15px;
-  font-weight:600;
-}
-</style>
+    #mensaje {
+      margin-top: 15px;
+      font-weight: 600;
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="main-card">
+  <div class="main-card">
 
-<img
-  src="https://drive.google.com/thumbnail?id=15hTMpm_5aNuU2QKTWZGdK2XKdtpEog4w"
-  class="logo-img"
-  alt="Columba Notebook">
+    <img src="https://drive.google.com/thumbnail?id=15hTMpm_5aNuU2QKTWZGdK2XKdtpEog4w" class="logo-img"
+      alt="Columba Notebook">
 
-<h2>Verificación de Identidad</h2>
+    <h2>Verificación de Identidad</h2>
 
-<p>
-Para verificar el estado de tu cuenta inicia sesión con Google.
-</p>
+    <p>
+      Para verificar el estado de tu cuenta inicia sesión con Google.
+    </p>
 
-<div id="buttonDiv"></div>
+    <div id="buttonDiv"></div>
 
-<div id="mensaje"></div>
+    <div id="mensaje"></div>
 
-</div>
+  </div>
 
-<script type="module">
+  <script type="module">
 
-import { Capacitor }
-from 'https://cdn.jsdelivr.net/npm/@capacitor/core/+esm';
+    import { Capacitor }
+      from 'https://cdn.jsdelivr.net/npm/@capacitor/core/+esm';
 
-const CLIENTE_WEB =
-"498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
+    const CLIENTE_WEB =
+      "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
 
-const CLIENTE_ANDROID =
-"839165918275-9e3pbpo84he4ti6m038ldbg21cj37fdr.apps.googleusercontent.com";
+    const CLIENTE_ANDROID =
+      "839165918275-9e3pbpo84he4ti6m038ldbg21cj37fdr.apps.googleusercontent.com";
 
-const URL_APPS_SCRIPT =
-"https://script.google.com/macros/s/AKfycby4ov5QtHYZUiw3CCXqpyxD8tU3LAiBSuZeKmTDcnY_FpTX_k946XlkJgEGoJTNsdOMLg/exec";
+    const URL_APPS_SCRIPT =
+      "https://script.google.com/macros/s/AKfycby4ov5QtHYZUiw3CCXqpyxD8tU3LAiBSuZeKmTDcnY_FpTX_k946XlkJgEGoJTNsdOMLg/exec";
 
-function mostrarAviso(texto,error=false){
+    function mostrarAviso(texto, error = false) {
 
-  const m=document.getElementById("mensaje");
+      const m = document.getElementById("mensaje");
 
-  m.style.color=
-    error
-      ? "#d32f2f"
-      : "#1a73e8";
+      m.style.color =
+        error
+          ? "#d32f2f"
+          : "#1a73e8";
 
-  m.textContent=texto;
-}
+      m.textContent = texto;
+    }
 
-function generarHuellaDigitalNativa(){
+    function generarHuellaDigitalNativa() {
 
-  const raw=[
-    navigator.userAgent,
-    navigator.language,
-    screen.width,
-    screen.height,
-    screen.colorDepth
-  ].join("|");
+      const raw = [
+        navigator.userAgent,
+        navigator.language,
+        screen.width,
+        screen.height,
+        screen.colorDepth
+      ].join("|");
 
-  let hash=0;
+      let hash = 0;
 
-  for(let i=0;i<raw.length;i++){
-    hash=((hash<<5)-hash)+raw.charCodeAt(i);
-    hash|=0;
-  }
+      for (let i = 0; i < raw.length; i++) {
+        hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+        hash |= 0;
+      }
 
-  return "FP-"+Math.abs(hash).toString(36).toUpperCase();
-}
+      return "FP-" + Math.abs(hash).toString(36).toUpperCase();
+    }
 
-function obtenerOGenerarDeviceId(){
+    function obtenerOGenerarDeviceId() {
 
-  let id=
-    localStorage.getItem("cn_device_id");
+      let id =
+        localStorage.getItem("cn_device_id");
 
-  if(!id){
+      if (!id) {
 
-    id=
-      "DEV-"+
-      Math.random()
-      .toString(36)
-      .substring(2,10)
-      .toUpperCase();
+        id =
+          "DEV-" +
+          Math.random()
+            .toString(36)
+            .substring(2, 10)
+            .toUpperCase();
 
-    localStorage.setItem(
-      "cn_device_id",
-      id
-    );
-  }
+        localStorage.setItem(
+          "cn_device_id",
+          id
+        );
+      }
 
-  return id;
-}
+      return id;
+    }
 
-function construirURLFinal(token){
+    function construirURLFinal(token) {
 
-  const deviceId=
-    obtenerOGenerarDeviceId();
+      const deviceId =
+        obtenerOGenerarDeviceId();
 
-  const huellaDigital=
-    generarHuellaDigitalNativa();
+      const huellaDigital =
+        generarHuellaDigitalNativa();
 
-  const devName=
-    navigator.userAgent;
+      const devName =
+        navigator.userAgent;
 
-  return (
-    URL_APPS_SCRIPT +
-    "?token=" +
-    encodeURIComponent(token) +
-    "&deviceId=" +
-    encodeURIComponent(deviceId) +
-    "&devName=" +
-    encodeURIComponent(devName) +
-    "&huellaDigital=" +
-    encodeURIComponent(huellaDigital)
-  );
-}
+      return (
+        URL_APPS_SCRIPT +
+        "?token=" +
+        encodeURIComponent(token) +
+        "&deviceId=" +
+        encodeURIComponent(deviceId) +
+        "&devName=" +
+        encodeURIComponent(devName) +
+        "&huellaDigital=" +
+        encodeURIComponent(huellaDigital)
+      );
+    }
 
-window.C = function(resp){
+    window.C = function (resp) {
 
-  if(!resp?.credential){
+      if (!resp?.credential) {
 
-    mostrarAviso(
-      "No se recibió credencial",
-      true
-    );
+        mostrarAviso(
+          "No se recibió credencial",
+          true
+        );
 
-    return;
-  }
+        return;
+      }
 
-  mostrarAviso(
-    "Acceso correcto..."
-  );
+      mostrarAviso(
+        "Acceso correcto..."
+      );
 
-  window.location.href =
-    construirURLFinal(
-      resp.credential
-    );
-};
+      window.location.href =
+        construirURLFinal(
+          resp.credential
+        );
+    };
 
-async function inicializar(){
+    async function inicializar() {
 
-  const esNativo =
-    Capacitor.isNativePlatform();
+      const esNativo =
+        Capacitor.isNativePlatform();
 
-  console.log(
-    "Capacitor.isNativePlatform:",
-    esNativo
-  );
+      console.log(
+        "Capacitor.isNativePlatform:",
+        esNativo
+      );
 
-  if(esNativo){
+      if (esNativo) {
 
-    mostrarAviso(
-      "Modo Android detectado"
-    );
+        mostrarAviso(
+          "Modo Android detectado"
+        );
 
-    document.getElementById(
-      "buttonDiv"
-    ).innerHTML =
-    `
+        document.getElementById(
+          "buttonDiv"
+        ).innerHTML =
+          `
     <button
       id="btnGoogleLogin"
       style="
@@ -225,140 +224,142 @@ async function inicializar(){
     </button>
     `;
 
-    document
-      .getElementById("btnGoogleLogin")
-      .addEventListener(
-        "click",
-        async () => {
+        document
+          .getElementById("btnGoogleLogin")
+          .addEventListener(
+            "click",
+            async () => {
 
-          try {
+              try {
 
-            mostrarAviso(
-              "PASO 1 - Click recibido"
-            );
+                mostrarAviso(
+                  "PASO 1 - Click recibido"
+                );
 
-            const deviceId =
-              obtenerOGenerarDeviceId();
+                const deviceId =
+                  obtenerOGenerarDeviceId();
 
-            mostrarAviso(
-              "PASO 2 - DeviceId OK"
-            );
+                mostrarAviso(
+                  "PASO 2 - DeviceId OK"
+                );
 
-            console.log(
-              "deviceId:",
-              deviceId
-            );
+                console.log(
+                  "deviceId:",
+                  deviceId
+                );
 
-            const huellaDigital =
-              generarHuellaDigitalNativa();
+                const huellaDigital =
+                  generarHuellaDigitalNativa();
 
-            mostrarAviso(
-              "PASO 3 - Huella OK"
-            );
+                mostrarAviso(
+                  "PASO 3 - Huella OK"
+                );
 
-            console.log(
-              "huella:",
-              huellaDigital
-            );
+                console.log(
+                  "huella:",
+                  huellaDigital
+                );
 
-            const devName =
-              navigator.userAgent;
+                const devName =
+                  navigator.userAgent;
 
-            mostrarAviso(
-              "PASO 4 - Generando URL"
-            );
+                mostrarAviso(
+                  "PASO 4 - Generando URL"
+                );
 
-            console.log(
-              "devName:",
-              devName
-            );
+                console.log(
+                  "devName:",
+                  devName
+                );
 
-            const urlFinal =
-              URL_APPS_SCRIPT +
-              "?debug=1" +
-              "&deviceId=" +
-              encodeURIComponent(deviceId) +
-              "&devName=" +
-              encodeURIComponent(devName) +
-              "&huellaDigital=" +
-              encodeURIComponent(huellaDigital);
+                const urlFinal =
+                  URL_APPS_SCRIPT +
+                  "?token=" +
+                  encodeURIComponent(token) +
+                  "&deviceId=" +
+                  encodeURIComponent(deviceId) +
+                  "&devName=" +
+                  encodeURIComponent(devName) +
+                  "&huellaDigital=" +
+                  encodeURIComponent(huellaDigital);
 
-            mostrarAviso(
-              "PASO 5 - URL creada"
-            );
+                mostrarAviso(
+                  "PASO 5 - URL creada"
+                );
 
-            console.log(
-              "urlFinal:",
-              urlFinal
-            );
+                console.log(
+                  "urlFinal:",
+                  urlFinal
+                );
 
-            mostrarAviso(
-              "PASO 6 - Navegando..."
-            );
+                mostrarAviso(
+                  "PASO 6 - Navegando..."
+                );
 
-            setTimeout(() => {
+                setTimeout(() => {
 
-              window.location.href =
-                urlFinal;
+                  window.location.href =
+                    urlFinal;
 
-            }, 1000);
+                }, 1000);
 
-          }
-          catch(error){
+              }
+              catch (error) {
 
-            console.error(error);
+                console.error(error);
 
-            mostrarAviso(
-              "ERROR: " +
-              (error.message || error),
-              true
-            );
+                mostrarAviso(
+                  "ERROR: " +
+                  (error.message || error),
+                  true
+                );
 
-          }
+              }
 
-        }
-      );
+            }
+          );
 
-    return;
-  }
-
-  if(window.google){
-
-    google.accounts.id.initialize({
-      client_id: CLIENTE_WEB,
-      callback: C
-    });
-
-    google.accounts.id.renderButton(
-      document.getElementById("buttonDiv"),
-      {
-        theme: "outline",
-        size: "large",
-        width: 290
+        return;
       }
+
+      if (window.google) {
+
+        google.accounts.id.initialize({
+          client_id: CLIENTE_WEB,
+          callback: C
+        });
+
+        google.accounts.id.renderButton(
+          document.getElementById("buttonDiv"),
+          {
+            theme: "outline",
+            size: "large",
+            width: 290
+          }
+        );
+
+        mostrarAviso(
+          "Login Web preparado"
+        );
+
+      } else {
+
+        mostrarAviso(
+          "Google GIS no cargó",
+          true
+        );
+
+      }
+
+    }
+
+    window.addEventListener(
+      "load",
+      inicializar
     );
 
-    mostrarAviso(
-      "Login Web preparado"
-    );
-
-  } else {
-
-    mostrarAviso(
-      "Google GIS no cargó",
-      true
-    );
-
-  }
-
-}
-
-window.addEventListener(
-  "load",
-  inicializar
-);
-
-</script>
+  </script>
 
 </body>
+
 </html>
