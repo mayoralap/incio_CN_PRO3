@@ -78,8 +78,6 @@
 
     import { Capacitor }
       from 'https://cdn.jsdelivr.net/npm/@capacitor/core/+esm';
-    import { SocialLogin }
-      from 'https://cdn.jsdelivr.net/npm/@capgo/capacitor-social-login/+esm';
 
     const CLIENTE_WEB =
       "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
@@ -196,17 +194,16 @@
       const esNativo =
         Capacitor.isNativePlatform();
 
+      console.log(
+        "Capacitor.isNativePlatform:",
+        esNativo
+      );
+
       if (esNativo) {
 
-        try {
-          await SocialLogin.initialize({
-            google: {
-              webClientId: CLIENTE_ANDROID
-            }
-          });
-        } catch (e) {
-          console.warn("Aviso inicializando SocialLogin:", e);
-        }
+        mostrarAviso(
+          "Modo Android detectado"
+        );
 
         document.getElementById(
           "buttonDiv"
@@ -236,32 +233,75 @@
               try {
 
                 mostrarAviso(
-                  "Conectando con Google..."
+                  "PASO 1 - Click recibido"
                 );
 
-                const res = await SocialLogin.login({
-                  provider: "google",
-                  options: {}
-                });
-
-                const resData = res.result || res;
-
-                const token =
-                  resData.idToken ||
-                  resData.accessToken ||
-                  resData?.authentication?.idToken;
-
-                if (!token) {
-                  throw new Error("No se obtuvo el token de Google");
-                }
+                const deviceId =
+                  obtenerOGenerarDeviceId();
 
                 mostrarAviso(
-                  "Acceso correcto..."
+                  "PASO 2 - DeviceId OK"
                 );
 
-                const urlFinal = construirURLFinal(token);
+                console.log(
+                  "deviceId:",
+                  deviceId
+                );
 
-                window.location.href = urlFinal;
+                const huellaDigital =
+                  generarHuellaDigitalNativa();
+
+                mostrarAviso(
+                  "PASO 3 - Huella OK"
+                );
+
+                console.log(
+                  "huella:",
+                  huellaDigital
+                );
+
+                const devName =
+                  navigator.userAgent;
+
+                mostrarAviso(
+                  "PASO 4 - Generando URL"
+                );
+
+                console.log(
+                  "devName:",
+                  devName
+                );
+
+                const urlFinal =
+                  URL_APPS_SCRIPT +
+                  "?token=" +
+                  encodeURIComponent(token) +
+                  "&deviceId=" +
+                  encodeURIComponent(deviceId) +
+                  "&devName=" +
+                  encodeURIComponent(devName) +
+                  "&huellaDigital=" +
+                  encodeURIComponent(huellaDigital);
+
+                mostrarAviso(
+                  "PASO 5 - URL creada"
+                );
+
+                console.log(
+                  "urlFinal:",
+                  urlFinal
+                );
+
+                mostrarAviso(
+                  "PASO 6 - Navegando..."
+                );
+
+                setTimeout(() => {
+
+                  window.location.href =
+                    urlFinal;
+
+                }, 1000);
 
               }
               catch (error) {
@@ -296,6 +336,10 @@
             size: "large",
             width: 290
           }
+        );
+
+        mostrarAviso(
+          "Login Web preparado"
         );
 
       } else {
