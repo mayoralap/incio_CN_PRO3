@@ -260,6 +260,110 @@
 
 }
 
+globalThis.ejecutarLoginMovilNativo =
+  async function () {
+
+    try {
+
+      mostrarAviso(
+        "Iniciando Google..."
+      );
+
+      const pluginNativo =
+        window.Capacitor?.Plugins?.SocialLogin;
+
+      if (!pluginNativo) {
+
+        mostrarAviso(
+          "Plugin SocialLogin no encontrado",
+          true
+        );
+
+        return;
+      }
+
+      mostrarAviso(
+        "Plugin encontrado"
+      );
+
+      const respuesta =
+        await pluginNativo.login({
+          provider: "google"
+        });
+
+      console.log(
+        "RESPUESTA LOGIN:",
+        JSON.stringify(
+          respuesta,
+          null,
+          2
+        )
+      );
+
+      const datos =
+        respuesta?.result ||
+        respuesta ||
+        {};
+
+      const token =
+        datos.idToken ||
+        datos.accessToken ||
+        datos?.authentication?.idToken ||
+        datos?.authentication?.accessToken;
+
+      if (!token) {
+
+        mostrarAviso(
+          "Login correcto pero sin token",
+          true
+        );
+
+        console.log(
+          "DATOS:",
+          JSON.stringify(
+            datos,
+            null,
+            2
+          )
+        );
+
+        return;
+      }
+
+      mostrarAviso(
+        "Token recibido"
+      );
+
+      const urlFinal =
+        construirURLFinal(
+          token
+        );
+
+      mostrarAviso(
+        "Redirigiendo..."
+      );
+
+      window.location.href =
+        urlFinal;
+
+    }
+    catch (error) {
+
+      console.error(error);
+
+      mostrarAviso(
+        "ERROR: " +
+        (
+          error?.message ||
+          String(error)
+        ),
+        true
+      );
+
+    }
+
+  };
+  
     window.addEventListener(
       "load",
       inicializar
