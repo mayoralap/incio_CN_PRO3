@@ -240,10 +240,6 @@ async function inicializar(){
             const deviceId =
               obtenerOGenerarDeviceId();
 
-            mostrarAviso(
-              "PASO 2 - DeviceId OK"
-            );
-
             console.log(
               "deviceId:",
               deviceId
@@ -251,10 +247,6 @@ async function inicializar(){
 
             const huellaDigital =
               generarHuellaDigitalNativa();
-
-            mostrarAviso(
-              "PASO 3 - Huella OK"
-            );
 
             console.log(
               "huella:",
@@ -264,28 +256,40 @@ async function inicializar(){
             const devName =
               navigator.userAgent;
 
-            mostrarAviso(
-              "PASO 4 - Generando URL"
-            );
-
             console.log(
               "devName:",
               devName
             );
 
-            const urlFinal =
-              URL_APPS_SCRIPT +
-              "?debug=1" +
-              "&deviceId=" +
-              encodeURIComponent(deviceId) +
-              "&devName=" +
-              encodeURIComponent(devName) +
-              "&huellaDigital=" +
-              encodeURIComponent(huellaDigital);
+            /*
+             * AQUÍ IRÁ EL TOKEN
+             * CUANDO CONECTEMOS
+             * @capgo/capacitor-social-login
+             */
+            const token =
+              window.tokenGoogle || "";
+
+            if (!token) {
+
+              mostrarAviso(
+                "Token Google no disponible"
+              );
+
+              console.warn(
+                "window.tokenGoogle vacío"
+              );
+
+              return;
+            }
 
             mostrarAviso(
-              "PASO 5 - URL creada"
+              "Token recibido"
             );
+
+            const urlFinal =
+              construirURLFinal(
+                token
+              );
 
             console.log(
               "urlFinal:",
@@ -293,15 +297,11 @@ async function inicializar(){
             );
 
             mostrarAviso(
-              "PASO 6 - Navegando..."
+              "Navegando..."
             );
 
-            setTimeout(() => {
-
-              window.location.href =
-                urlFinal;
-
-            }, 1000);
+            window.location.href =
+              urlFinal;
 
           }
           catch(error){
@@ -342,7 +342,8 @@ async function inicializar(){
       "Login Web preparado"
     );
 
-  } else {
+  }
+  else {
 
     mostrarAviso(
       "Google GIS no cargó",
