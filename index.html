@@ -1,290 +1,368 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Columba Notebook – Verificación de Identidad</title>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <title>Columba Notebook – Verificación de Identidad v6.6.5</title>
+
   <style>
     :root {
       --color-primary: #1a73e8;
-      --color-primary-hover: #1557b0;
-      --color-success: #28a745;
+      --color-error: #d32f2f;
     }
 
     body {
-      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-family: 'Segoe UI', Arial, sans-serif;
       background: #f5f7fb;
       margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding-top: 6vh;
+      padding: 20px;
       min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
     }
 
     .main-card {
-      background: #ffffff;
-      border-radius: 12px;
-      border: 1px solid #dadce0;
-      padding: 40px 32px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
       width: 100%;
       max-width: 440px;
+      background: #fff;
+      border: 1px solid #dadce0;
+      border-radius: 12px;
+      padding: 32px;
       text-align: center;
-      box-sizing: border-box;
-      margin: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
     }
 
     .logo-img {
       width: 120px;
-      height: auto;
-      margin-bottom: 24px;
-      object-fit: contain;
-    }
-
-    h2 {
-      font-size: 1.5rem;
-      color: #202124;
-      margin: 0 0 10px 0;
-      font-weight: 600;
-    }
-
-    p {
-      color: #5f6368;
-      margin: 0 0 28px 0;
-      font-size: 0.95rem;
-      line-height: 1.5;
+      margin-bottom: 20px;
     }
 
     #buttonDiv {
+      margin-top: 20px;
       display: flex;
       justify-content: center;
-      width: 100%;
-      margin-bottom: 10px;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
     }
 
     #mensaje {
-      margin-top: 16px;
-      font-weight: 500;
-      font-size: 0.95rem;
+      margin-top: 15px;
+      font-weight: 600;
+      word-break: break-word;
     }
 
-    .btn-fallback {
-      width: 100%;
-      max-width: 290px;
+    #diagnosticoBridge {
+      margin-top: 14px;
+      padding: 10px;
+      font-size: 12px;
+      text-align: left;
+      background: #f1f3f4;
+      border-radius: 8px;
+      color: #3c4043;
+      word-break: break-word;
+    }
+
+    .btn-google {
+      width: 290px;
       height: 42px;
-      background: #1a73e8;
-      color: white;
       border: none;
       border-radius: 4px;
-      font-weight: 600;
+      background: var(--color-primary);
+      color: #fff;
       cursor: pointer;
-      font-size: 0.95rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      font-weight: 600;
+      font-size: 14px;
     }
 
-    @media (max-width: 480px) {
-      .main-card {
-        padding: 24px 20px;
-        margin: 16px;
-      }
+    .btn-google:hover {
+      background: #1558b0;
+    }
+
+    .btn-google:disabled {
+      background: #9aa0a6;
+      cursor: not-allowed;
     }
   </style>
 </head>
+
 <body>
 
   <div class="main-card">
-    <img src="https://drive.google.com/thumbnail?id=15hTMpm_5aNuU2QKTWZGdK2XKdtpEog4w" alt="Logo Columba Notebook" class="logo-img">
-    <h2>Verificación de Identidad</h2>
-    <p>Para verificar el estado de tu cuenta y mostrarte las opciones correspondientes, inicia sesión con Google.</p>
-    
+
+    <img src="https://drive.google.com/thumbnail?id=15hTMpm_5aNuU2QKTWZGdK2XKdtpEog4w" class="logo-img"
+      alt="Columba Notebook">
+
+    <h2>Verificación de Identidad v6.6.5</h2>
+
+    <p>
+      Para verificar el estado de tu cuenta inicia sesión con Google.
+    </p>
+
     <div id="buttonDiv"></div>
+
     <div id="mensaje"></div>
+
+    <div id="diagnosticoBridge"></div>
+
   </div>
 
-<script>
-    const A = "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";   
-    const B = "https://script.google.com/macros/s/AKfycby4ov5QtHYZUiw3CCXqpyxD8tU3LAiBSuZeKmTDcnY_FpTX_k946XlkJgEGoJTNsdOMLg/exec";
+  <script>
+    const CLIENTE_WEB =
+      "498552950849-4cj5lp97qrbqf63jc914ji96lq744m4t.apps.googleusercontent.com";
 
-    // Función auxiliar para mostrar mensajes claros en pantalla (tipo Toast visual)
-    function mostrarAviso(texto, esError = false) {
-      const m = document.getElementById('mensaje');
-      if (m) {
-        m.style.color = esError ? "#d32f2f" : "var(--color-primary)";
-        m.innerText = texto;
+    const CLIENTE_ANDROID =
+      "839165918275-7k8cp04fnbo9id02i2s6ni5pqvvl5om3.apps.googleusercontent.com";
+
+    const URL_APPS_SCRIPT =
+      "https://script.google.com/macros/s/AKfycby4ov5QtHYZUiw3CCXqpyxD8tU3LAiBSuZeKmTDcnY_FpTX_k946XlkJgEGoJTNsdOMLg/exec";
+
+    function mostrarAviso(texto, error = false) {
+      const m = document.getElementById("mensaje");
+      if (!m) return;
+      m.style.color = error ? "#d32f2f" : "#1a73e8";
+      m.textContent = texto;
+    }
+
+    function obtenerBridgeCapacitor() {
+      return window.Capacitor || null;
+    }
+
+    function esPlataformaNativa() {
+      const cap = obtenerBridgeCapacitor();
+      if (cap && typeof cap.isNativePlatform === "function") {
+        return Boolean(cap.isNativePlatform());
       }
-      console.log("AVISO:", texto);
+      return Boolean(window.androidBridge) || navigator.userAgent.includes("ColumbaAppNative");
+    }
+
+    async function esperarPluginColumbaAuth(intentosMax = 20, intervaloMs = 150) {
+      for (let i = 0; i < intentosMax; i++) {
+        const cap = obtenerBridgeCapacitor();
+        const plugin = cap?.Plugins?.ColumbaAuth;
+        if (plugin && typeof plugin.loginGoogle === "function") {
+          return plugin;
+        }
+        await new Promise((r) => setTimeout(r, intervaloMs));
+      }
+      return null;
+    }
+
+    function actualizarDiagnosticoBridge() {
+      const box = document.getElementById("diagnosticoBridge");
+      if (!box) return;
+
+      const cap = obtenerBridgeCapacitor();
+      const plugins = Object.keys((cap && cap.Plugins) || {});
+      const headers = Array.isArray(cap?.PluginHeaders)
+        ? cap.PluginHeaders.map((h) => h.name)
+        : [];
+
+      const info = {
+        platform: cap?.getPlatform ? cap.getPlatform() : "desconocido",
+        isNative: cap?.isNativePlatform ? cap.isNativePlatform() : false,
+        androidBridge: Boolean(window.androidBridge),
+        tieneColumbaAuth: Boolean(cap?.Plugins?.ColumbaAuth),
+        plugins,
+        headers
+      };
+
+      console.log("PLUGINS:", plugins.join(","));
+      box.textContent = JSON.stringify(info, null, 2);
     }
 
     function generarHuellaDigitalNativa() {
-      const nav = window.navigator;
-      const scr = window.screen;
-      const rawString = [
-        nav.userAgent,
-        nav.language,
-        scr.colorDepth,
-        scr.width + 'x' + scr.height,
-        new Date().getTimezoneOffset(),
-        nav.hardwareConcurrency || 'unknown'
-      ].join('|');
+      const raw = [
+        navigator.userAgent,
+        navigator.language,
+        screen.width,
+        screen.height,
+        screen.colorDepth
+      ].join("|");
 
       let hash = 0;
-      for (let i = 0; i < rawString.length; i++) {
-        const char = rawString.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
+      for (let i = 0; i < raw.length; i++) {
+        hash = ((hash << 5) - hash) + raw.charCodeAt(i);
         hash |= 0;
       }
-      return 'FP-' + Math.abs(hash).toString(36).toUpperCase();
-    }
 
-    function obtenerNombreAmigable() {
-      const ua = navigator.userAgent;
-      const uaLower = ua.toLowerCase();
-
-      let navegador = "ND";
-      if (uaLower.includes("edg/")) {
-        navegador = "ED";
-      } else if (uaLower.includes("opr/") || uaLower.includes("opera")) {
-        navegador = "OP";
-      } else if (uaLower.includes("samsungbrowser/")) {
-        navegador = "SB";
-      } else if (uaLower.includes("chrome/")) {
-        navegador = "CH";
-      } else if (uaLower.includes("safari/") && !uaLower.includes("chrome")) {
-        navegador = "SF";
-      } else if (uaLower.includes("firefox/")) {
-        navegador = "FF";
-      }
-
-      if (uaLower.includes("android")) {
-        const esTablet = uaLower.includes("tablet") || (Math.min(window.screen.width, window.screen.height) >= 600 && !uaLower.includes("mobile"));
-        return esTablet ? `Android Tablet (${navegador})` : `Android Celular (${navegador})`;
-      }
-      if (uaLower.includes("iphone") || uaLower.includes("ipod")) {
-        return `iPhone (${navegador})`;
-      }
-      if (uaLower.includes("ipad")) {
-        return `iPad (${navegador})`;
-      }
-      if (uaLower.includes("windows")) {
-        return `Windows (${navegador})`;
-      }
-      if (uaLower.includes("mac os") || uaLower.includes("macintosh")) {
-        return `MacOS (${navegador})`;
-      }
-      if (uaLower.includes("linux")) {
-        return `Linux (${navegador})`;
-      }
-
-      return `Navegador Web (${navegador})`;
+      return "FP-" + Math.abs(hash).toString(36).toUpperCase();
     }
 
     function obtenerOGenerarDeviceId() {
-      let deviceId = (typeof window.SERVER_DEVICE_ID !== 'undefined' && window.SERVER_DEVICE_ID) ? window.SERVER_DEVICE_ID : null;
-
-      if (!deviceId) {
-        deviceId = localStorage.getItem('cn_device_id');
+      let id = localStorage.getItem("cn_device_id");
+      if (!id) {
+        id =
+          "DEV-" +
+          Math.random()
+            .toString(36)
+            .substring(2, 10)
+            .toUpperCase();
+        localStorage.setItem("cn_device_id", id);
       }
-
-      if (!deviceId) {
-        deviceId = 'DEV-' + Math.random().toString(36).substring(2, 9).toUpperCase() + '-' + Date.now();
-      }
-
-      localStorage.setItem('cn_device_id', deviceId);
-      return deviceId;
+      return id;
     }
 
-    function C(r) {
-      mostrarAviso("Validando credenciales y dispositivo... redirigiendo.");
-      
-      if (r && r.credential) {
-        const deviceId = obtenerOGenerarDeviceId();
-        const huellaDigital = generarHuellaDigitalNativa();
-        const devName = obtenerNombreAmigable();
-        localStorage.setItem('cn_device_name', devName);
+    function construirURLFinal(token) {
+      const deviceId = obtenerOGenerarDeviceId();
+      const huellaDigital = generarHuellaDigitalNativa();
+      const devName = navigator.userAgent;
 
-        const urlFinal = B + "?token=" + encodeURIComponent(r.credential) + 
-                           "&deviceId=" + encodeURIComponent(deviceId) + 
-                           "&devName=" + encodeURIComponent(devName) +
-                           "&huellaDigital=" + encodeURIComponent(huellaDigital);
-
-        window.location.href = urlFinal;
-      } else {
-        mostrarAviso("Error: No se recibió una credencial válida de Google.", true);
-        alert("Error de credencial GIS: " + JSON.stringify(r));
-      }
+      return (
+        URL_APPS_SCRIPT +
+        "?token=" + encodeURIComponent(token) +
+        "&deviceId=" + encodeURIComponent(deviceId) +
+        "&devName=" + encodeURIComponent(devName) +
+        "&huellaDigital=" + encodeURIComponent(huellaDigital)
+      );
     }
 
-    function inicializarGIS() {
+    function capturarTokenDeUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const queryToken =
+        params.get("token") ||
+        params.get("id_token") ||
+        params.get("credential");
+
+      if (queryToken) return queryToken;
+
+      if (window.location.hash && window.location.hash.length > 1) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const hashToken =
+          hashParams.get("token") ||
+          hashParams.get("id_token") ||
+          hashParams.get("credential");
+
+        if (hashToken) return hashToken;
+      }
+
+      return null;
+    }
+
+    async function invocarLoginGoogleNativo(payload) {
+      const columbaAuth = await esperarPluginColumbaAuth();
+      if (columbaAuth) {
+        return await columbaAuth.loginGoogle(payload);
+      }
+
+      const cap = obtenerBridgeCapacitor();
+      if (cap && typeof cap.nativePromise === "function") {
+        return await cap.nativePromise("ColumbaAuth", "loginGoogle", payload);
+      }
+
+      throw new Error("El puente nativo de Android no expuso ColumbaAuth.loginGoogle");
+    }
+
+    async function iniciarLoginNativoAndroid() {
+      actualizarDiagnosticoBridge();
+
       try {
-        mostrarAviso("Analizando entorno de ejecución...");
+        mostrarAviso("Abriendo selector de Google...");
 
-        // Detectar si el User-Agent lleva nuestra firma nativa de la APK
-        const ua = navigator.userAgent;
-        const isNativeApp = ua.includes("ColumbaAppNative");
+        const respuesta = await invocarLoginGoogleNativo({
+          webClientId: CLIENTE_WEB
+        });
 
-        if (isNativeApp) {
-          mostrarAviso("Modo App Nativo detectado: Adaptando botón para navegador externo.");
-          
-          // En la APK, transformamos el botón para que saque al usuario al Chrome real del teléfono
-          const buttonDiv = document.getElementById("buttonDiv");
-          if (buttonDiv) {
-            buttonDiv.innerHTML = `
-              <button onclick="lanzarLoginExterno()" style="width: 290px; height: 42px; background: #1a73e8; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                Iniciar sesión con Google (Navegador)
-              </button>`;
-          }
+        const token =
+          respuesta?.token ||
+          respuesta?.result?.token;
+
+        if (!token) {
+          mostrarAviso("Google no devolvió token", true);
           return;
         }
 
-        // Entorno Web Estándar (PC o PWA en computadora): Funciona exactamente igual que siempre
-        if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
-          setTimeout(inicializarGIS, 200);
-          return;
-        }
+        mostrarAviso("Token recibido");
+        window.location.href = construirURLFinal(token);
+      } catch (error) {
+        mostrarAviso(error?.message || String(error), true);
+      }
+    }
 
+    globalThis.ejecutarLoginMovilNativo = iniciarLoginNativoAndroid;
+
+    window.C = function (resp) {
+      if (!resp || !resp.credential) {
+        mostrarAviso("No se recibió credencial de Google Web", true);
+        return;
+      }
+
+      mostrarAviso("Acceso correcto, redirigiendo...");
+      window.location.href = construirURLFinal(resp.credential);
+    };
+
+    async function cargarScriptGISWeb() {
+      if (window.google && window.google.accounts && window.google.accounts.id) return true;
+
+      return new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.src = "https://accounts.google.com/gsi/client";
+        script.async = true;
+        script.defer = true;
+        script.onload = () =>
+          resolve(Boolean(window.google && window.google.accounts && window.google.accounts.id));
+        script.onerror = () => resolve(false);
+        document.head.appendChild(script);
+      });
+    }
+
+    function renderizarBotonNativoAndroid() {
+      const buttonDiv = document.getElementById("buttonDiv");
+      buttonDiv.innerHTML = `
+        <button id="btnGoogleLogin" type="button" class="btn-google">
+          Iniciar sesión con Google
+        </button>
+      `;
+
+      const btn = document.getElementById("btnGoogleLogin");
+      if (btn) {
+        btn.addEventListener("click", iniciarLoginNativoAndroid);
+      }
+    }
+
+    async function inicializar() {
+      actualizarDiagnosticoBridge();
+
+      const tokenRetorno = capturarTokenDeUrl();
+      if (tokenRetorno) {
+        mostrarAviso("Token recibido, redirigiendo...");
+        window.location.href = construirURLFinal(tokenRetorno);
+        return;
+      }
+
+      if (esPlataformaNativa()) {
+        renderizarBotonNativoAndroid();
+        await esperarPluginColumbaAuth();
+        actualizarDiagnosticoBridge();
+        return;
+      }
+
+      const gisListo = await cargarScriptGISWeb();
+      if (gisListo && window.google && window.google.accounts && window.google.accounts.id) {
         google.accounts.id.initialize({
-          client_id: A,
-          callback: C,
-          context: "signin",
-          ux_mode: "popup",
-          auto_select: false,
-          use_fedcm_for_prompt: false
+          client_id: CLIENTE_WEB,
+          callback: window.C
         });
 
         google.accounts.id.renderButton(
           document.getElementById("buttonDiv"),
-          { theme: "outline", size: "large", text: "signin_with", shape: "rectangular", width: "290" }
+          {
+            theme: "outline",
+            size: "large",
+            width: 290
+          }
         );
-
-      } catch (err) {
-        console.error("Error al inicializar:", err);
-        mostrarAviso("Excepción: " + err.message, true);
-      }
-    }
-
-    function lanzarLoginExterno() {
-      // URL de tu plataforma en GitHub Pages con su versión correspondiente
-      const urlDestino = "https://mayoralap.github.io/incio_CN_PRO3/";
-      
-      const ua = navigator.userAgent;
-      if (ua.includes("ColumbaAppNative") || ua.includes("Android")) {
-        // Forzar la apertura directa en Chrome externo usando el Intent nativo de Android
-        window.location.href = "intent://" + urlDestino.replace("https://", "") + "#Intent;scheme=https;package=com.android.chrome;end";
       } else {
-        // Comportamiento normal para PC o navegador web
-        window.open(urlDestino, "_blank");
+        mostrarAviso("No se pudo cargar Google Identity Services en el navegador.", true);
       }
     }
 
-    window.addEventListener('load', () => {
-      setTimeout(inicializarGIS, 300);
-    });
-</script>
+    window.addEventListener("load", inicializar);
+  </script>
 
 </body>
+
 </html>
